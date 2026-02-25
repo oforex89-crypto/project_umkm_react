@@ -165,7 +165,7 @@ export function HeroSection({
   return (
     <section className="w-full px-0 py-8">
       <div
-        className="relative h-[400px] md:h-[500px] rounded-2xl mx-4 overflow-hidden shadow-2xl group cursor-pointer"
+        className="relative h-[300px] sm:h-[400px] md:h-[500px] rounded-2xl mx-4 overflow-hidden shadow-2xl group cursor-pointer"
         onClick={() => onSlideClick?.(current.eventId)}
       >
         {/* Background Images */}
@@ -192,7 +192,7 @@ export function HeroSection({
                 }}
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           </div>
         ))}
 
@@ -204,14 +204,14 @@ export function HeroSection({
         )}
 
         {/* Content */}
-        <div className="absolute bottom-8 left-8 right-8 z-20">
-          <h2 className="text-white text-3xl md:text-4xl font-bold mb-3 drop-shadow-lg">
+        <div className="absolute bottom-8 left-4 right-4 md:left-8 md:right-8 z-20">
+          <h2 className="text-white text-xl sm:text-2xl md:text-4xl font-bold mb-2 md:mb-3 drop-shadow-lg line-clamp-2">
             {current.title}
           </h2>
-          <p className="text-white/90 text-lg md:text-xl mb-6 max-w-2xl drop-shadow-md">
+          <p className="text-white/90 text-sm sm:text-base md:text-xl mb-3 md:mb-6 max-w-2xl drop-shadow-md line-clamp-2">
             {current.description}
           </p>
-          <div className="text-white/80 text-sm font-medium drop-shadow-md inline-block">
+          <div className="text-white/80 text-xs sm:text-sm font-medium drop-shadow-md inline-block">
             Klik untuk melihat semua event →
           </div>
         </div>
@@ -246,8 +246,8 @@ export function HeroSection({
                 setCurrentSlide(index);
               }}
               className={`h-2 rounded-full transition-all shadow-lg ${index === currentSlide
-                  ? "bg-white w-8"
-                  : "bg-white/50 hover:bg-white/75 w-2"
+                ? "bg-white w-8"
+                : "bg-white/50 hover:bg-white/75 w-2"
                 }`}
             />
           ))}
