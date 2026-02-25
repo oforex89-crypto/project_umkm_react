@@ -31,6 +31,7 @@ return [
         'https://project-umkm-react.vercel.app',
         'https://projecct-umkm-laravel-production.up.railway.app',
         'https://redemtor-mundi-umkmdigital-production.up.railway.app',
+        'https://redemtor-mundi-umkmdigital-production-f609.up.railway.app',
     ],
 
     'allowed_origins_patterns' => [
