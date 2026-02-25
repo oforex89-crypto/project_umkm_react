@@ -5,7 +5,6 @@ import { HeroSection } from "../components/HeroSection";
 import { FeaturedSection } from "../components/FeaturedSection";
 import { SpecialPackagesSection } from "../components/SpecialPackagesSection";
 import { FoodStand } from "../types";
-import { foodStands } from "../data/stands";
 import { getImageUrl, getPlaceholderDataUrl, handleImageError } from "../utils/imageHelpers";
 import { API_BASE_URL } from "../config/api";
 
@@ -57,13 +56,13 @@ export function HomePage() {
         });
 
         const activeStands = apiStands.filter((stand) => stand.isActive);
-        setUmkmList([...foodStands, ...activeStands]);
+        setUmkmList(activeStands);
       } else {
-        setUmkmList(foodStands);
+        setUmkmList([]);
       }
     } catch (error) {
       console.error("Error loading UMKM:", error);
-      setUmkmList(foodStands);
+      setUmkmList([]);
     } finally {
       setLoading(false);
     }
