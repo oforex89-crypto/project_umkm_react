@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Perjanjian Kerjasama Event - Pasar UMKM</title>
+    <style>
+        @media print {
+            body { margin: 0; padding: 20mm; }
+            .no-print { display: none !important; }
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+        }
+        h1 {
+            text-align: center;
+            font-size: 18pt;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 14pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .pasal {
+            margin: 20px 0;
+        }
+        .pasal-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        ol, ul {
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .form-field {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            min-width: 200px;
+            margin: 0 5px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 80px;
+            padding-top: 5px;
+        }
+        .date-location {
+            text-align: right;
+            margin: 30px 0;
+        }
+        .materai {
+            border: 2px solid #000;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4F46E5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .print-btn:hover {
+            background: #4338CA;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    
+    <div class="header-info">
+        <h1>SURAT PERJANJIAN KERJASAMA<br>PARTISIPASI EVENT PASAR UMKM</h1>
+        <p>Nomor: <span class="form-field">_________/PKS/UMKM/__________</span></p>
+    </div>
+
+    <p>
+        Pada hari ini, <span class="form-field">_____________</span> tanggal <span class="form-field">_____</span> 
+        bulan <span class="form-field">_______________</span> tahun <span class="form-field">________</span>, 
+        yang bertanda tangan di bawah ini:
+    </p>
+
+    <div class="pasal">
+        <p><strong>I. PIHAK PERTAMA (Penyelenggara Event)</strong></p>
+        <table style="margin-left: 20px; margin-top: 10px;">
+            <tr><td width="150">Nama</td><td>: <span class="form-field">Panitia Pasar UMKM</span></td></tr>
+            <tr><td>Alamat</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>Telepon</td><td>: <span class="form-field">___________________________________</span></td></tr>
+        </table>
+        <p style="margin-left: 20px; margin-top: 10px;">
+            Selanjutnya disebut sebagai <strong>PIHAK PERTAMA</strong>
+        </p>
+    </div>
+
+    <div class="pasal">
+        <p><strong>II. PIHAK KEDUA (UMKM/Vendor)</strong></p>
+        <table style="margin-left: 20px; margin-top: 10px;">
+            <tr><td width="150">Nama Toko</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>Nama Pemilik</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>Alamat</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>No. WhatsApp</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>Paroki</td><td>: <span class="form-field">___________________________________</span></td></tr>
+            <tr><td>Lingkungan</td><td>: <span class="form-field">___________________________________</span></td></tr>
+        </table>
+        <p style="margin-left: 20px; margin-top: 10px;">
+            Selanjutnya disebut sebagai <strong>PIHAK KEDUA</strong>
+        </p>
+    </div>
+
+    <p>
+        Kedua belah pihak sepakat untuk mengadakan perjanjian kerjasama dengan ketentuan sebagai berikut:
+    </p>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 1<br>RUANG LINGKUP KERJASAMA</div>
+        <ol>
+            <li>PIHAK PERTAMA menyelenggarakan event dengan nama: <span class="form-field">___________________</span></li>
+            <li>Event dilaksanakan pada tanggal <span class="form-field">_______________</span> sampai <span class="form-field">_______________</span></li>
+            <li>Lokasi event: <span class="form-field">_______________________________________</span></li>
+            <li>PIHAK KEDUA sepakat untuk berpartisipasi sebagai vendor/penjual pada event tersebut.</li>
+        </ol>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 2<br>HAK DAN KEWAJIBAN PIHAK PERTAMA</div>
+        <ol>
+            <li>Menyediakan tempat/stand untuk PIHAK KEDUA</li>
+            <li>Menyediakan fasilitas dasar (meja, listrik jika tersedia)</li>
+            <li>Mempromosikan event kepada masyarakat</li>
+            <li>Menjaga keamanan dan ketertiban selama event berlangsung</li>
+            <li>Memberikan informasi terkait jadwal dan tata tertib event</li>
+        </ol>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 3<br>HAK DAN KEWAJIBAN PIHAK KEDUA</div>
+        <ol>
+            <li>Mendapatkan tempat/stand sesuai ketentuan panitia</li>
+            <li>Menjual produk sesuai dengan yang didaftarkan</li>
+            <li>Hadir tepat waktu sesuai jadwal yang ditentukan</li>
+            <li>Menjaga kebersihan area stand</li>
+            <li>Mematuhi tata tertib yang ditetapkan panitia</li>
+            <li>Bertanggung jawab terhadap produk yang dijual</li>
+            <li>Membayar biaya partisipasi (jika ada): Rp <span class="form-field">____________</span></li>
+        </ol>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 4<br>PRODUK YANG DIJUAL</div>
+        <p>Produk yang akan dijual oleh PIHAK KEDUA:</p>
+        <ol>
+            <li><span class="form-field" style="min-width: 400px;">___________________________________</span></li>
+            <li><span class="form-field" style="min-width: 400px;">___________________________________</span></li>
+            <li><span class="form-field" style="min-width: 400px;">___________________________________</span></li>
+            <li><span class="form-field" style="min-width: 400px;">___________________________________</span></li>
+        </ol>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 5<br>PEMBATALAN</div>
+        <ol>
+            <li>Pembatalan oleh PIHAK KEDUA minimal 7 hari sebelum event</li>
+            <li>Pembatalan mendadak dapat mengakibatkan sanksi berupa tidak dapat mengikuti event berikutnya</li>
+            <li>PIHAK PERTAMA berhak membatalkan event dengan pemberitahuan minimal 3 hari sebelumnya</li>
+        </ol>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 6<br>PENYELESAIAN SENGKETA</div>
+        <p>Apabila terjadi perselisihan, kedua belah pihak sepakat untuk menyelesaikan secara musyawarah mufakat.</p>
+    </div>
+
+    <div class="pasal">
+        <div class="pasal-title">PASAL 7<br>PENUTUP</div>
+        <p>Demikian surat perjanjian kerjasama ini dibuat dengan sebenarnya dan penuh tanggung jawab untuk dapat dipergunakan sebagaimana mestinya.</p>
+    </div>
+
+    <div class="date-location">
+        <p>
+            <span class="form-field">___________________</span>, 
+            <span class="form-field">_____</span> 
+            <span class="form-field">_______________</span> 
+            <span class="form-field">________</span>
+        </p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <p><strong>PIHAK PERTAMA</strong></p>
+            <p>Penyelenggara Event</p>
+            <div class="materai">Materai<br>10000</div>
+            <div class="signature-line">
+                <p>(<span class="form-field">___________________</span>)</p>
+            </div>
+        </div>
+        <div class="signature-box">
+            <p><strong>PIHAK KEDUA</strong></p>
+            <p>Pemilik UMKM</p>
+            <div style="height: 60px; margin: 20px 0;"></div>
+            <div class="signature-line">
+                <p>(<span class="form-field">___________________</span>)</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc;" class="no-print">
+        <p style="font-size: 12px; color: #666;">
+            <strong>Petunjuk Pengisian:</strong><br>
+            1. Lengkapi semua kolom yang masih kosong<br>
+            2. Cetak dokumen ini (Ctrl/Cmd + P) atau simpan sebagai PDF<br>
+            3. Tanda tangani di bagian yang disediakan<br>
+            4. Scan atau foto dokumen yang sudah ditandatangani<br>
+            5. Upload kembali melalui form pendaftaran event
+        </p>
+    </div>
+</body>
+</html>
