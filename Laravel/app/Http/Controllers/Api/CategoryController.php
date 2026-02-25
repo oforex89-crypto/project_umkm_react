@@ -11,16 +11,30 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        // Use legacy tkategori table
-        $categories = DB::table('tkategori')
-            ->where('status', 'aktif')
-            ->select('kodekategori as id', 'namakategori as name', 'status')
-            ->get();
+        try {
+            // Try using categories table first
+            $categories = DB::table('categories')
+                ->select('id', 'nama_kategori')
+                ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $categories
-        ], 200);
+            // If empty, fallback to tkategori table
+            if ($categories->isEmpty()) {
+                $categories = DB::table('tkategori')
+                    ->select('kodekategori as id', 'namakategori as nama_kategori')
+                    ->get();
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $categories
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch categories',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)

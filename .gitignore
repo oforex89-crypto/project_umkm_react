@@ -28,3 +28,6 @@ Laravel/storage/*.key
 # Package locks (optional - remove if you want to keep them)
 # package-lock.json
 # composer.lock
+
+*.zip
+

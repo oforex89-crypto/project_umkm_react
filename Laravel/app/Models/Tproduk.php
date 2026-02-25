@@ -34,4 +34,10 @@ class Tproduk extends Model
     {
         return $this->belongsTo(Tumkm::class, 'umkm_id');
     }
+
+    public function variantTypes()
+    {
+        return $this->hasMany(ProductVariantType::class, 'product_id')
+                    ->orderBy('display_order');
+    }
 }

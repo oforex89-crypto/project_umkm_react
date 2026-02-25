@@ -22,6 +22,8 @@ class User extends Authenticatable
         'wa_verification_code',
         'wa_verified_at',
         'alamat',
+        'kota',
+        'kode_pos',
         'foto_profil',
     ];
 

@@ -6,19 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $keyType = 'string';
-    public $incrementing = false;
+    protected $keyType = 'int';
+    public $incrementing = true;
     protected $primaryKey = 'id';
     protected $table = 'categories';
 
     protected $fillable = [
         'id',
-        'nama',
+        'nama_kategori',
+        'icon',
         'status'
     ];
 
     public function businesses()
     {
-        return $this->hasMany(Business::class, 'category_id', 'id');
+        return $this->hasMany(Tumkm::class, 'kategori_id', 'id');
     }
 }

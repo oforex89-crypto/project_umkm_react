@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Tumkm;
 use App\Models\Tproduk;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+
 
 class UmkmController extends Controller
 {
@@ -33,25 +35,44 @@ class UmkmController extends Controller
                 ], 404);
             }
 
-            if ($user->role !== 'umkm' && $user->role !== 'umkm_owner') {
+            if ($user->role !== 'umkm') {
                 return response()->json([
                     'success' => false,
                     'message' => 'User must have UMKM role to submit a store'
                 ], 403);
             }
 
+            // Debug log - check what fields are received
+            \Log::info('UMKM Submit - Received data:', [
+                'paroki' => $request->paroki,
+                'umat' => $request->umat,
+                'nama_bank' => $request->nama_bank,
+                'no_rekening' => $request->no_rekening,
+                'atas_nama_rekening' => $request->atas_nama_rekening,
+                'menyediakan_jasa_kirim' => $request->menyediakan_jasa_kirim,
+                'has_dokumen' => $request->hasFile('dokumen_perjanjian'),
+            ]);
+
             // Validate request
             $validator = Validator::make($request->all(), [
                 'nama_toko' => 'required|string|max:255',
                 'nama_pemilik' => 'required|string|max:255',
                 'deskripsi' => 'required|string',
-                'foto_toko' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:5120',
+                'foto_toko' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+                'dokumen_perjanjian' => 'nullable|mimes:pdf,doc,docx,jpeg,jpg,png|max:10240', // Allow document files
                 'kategori_id' => 'nullable', // Allow any type, will be converted to string
+                'kategori' => 'nullable|string|max:100', // Category name from frontend
                 'whatsapp' => 'nullable|string|max:20',
                 'telepon' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'instagram' => 'nullable|string|max:100',
                 'about_me' => 'nullable|string|max:1000',
+                'paroki' => 'nullable|string|max:255',
+                'umat' => 'nullable|string|max:255',
+                'nama_bank' => 'nullable|string|max:100',
+                'no_rekening' => 'nullable|string|max:50',
+                'atas_nama_rekening' => 'nullable|string|max:255',
+                'menyediakan_jasa_kirim' => 'nullable|in:0,1,true,false',
                 'produk' => 'required|string', // JSON string
             ]);
 
@@ -74,8 +95,30 @@ class UmkmController extends Controller
             // Generate kodepengguna from user_id
             $kodepengguna = 'U' . str_pad($userId, 3, '0', STR_PAD_LEFT);
 
-            // Ensure kategori_id is set, use default if not provided
-            $kategoriId = (string)($request->kategori_id ?? '1');
+            // Map category name to kategori_id
+            $kategoriId = '1'; // Default
+            if ($request->kategori_id) {
+                $kategoriId = (string)$request->kategori_id;
+            } elseif ($request->kategori) {
+                // Map category name to ID from database
+                $category = DB::table('categories')
+                    ->where('nama_kategori', 'like', '%' . $request->kategori . '%')
+                    ->first();
+                if ($category) {
+                    $kategoriId = (string)$category->id;
+                } else {
+                    // Fallback mapping for common category names
+                    $categoryMapping = [
+                        'Fashion' => '1',
+                        'Kerajinan' => '2',
+                        'Kuliner' => '3',
+                        'Kecantikan' => '4',
+                        'Aksesoris' => '5',
+                        'UMKM' => '6',
+                    ];
+                    $kategoriId = $categoryMapping[$request->kategori] ?? '1';
+                }
+            }
             
             // Note: tpengguna table is now for event visitors only
             // No need to insert into tpengguna for UMKM submissions
@@ -99,6 +142,16 @@ class UmkmController extends Controller
                 $fotoTokoPath = 'uploads/toko/' . $filename;
             }
 
+            // Handle dokumen_perjanjian upload
+            $dokumenPath = null;
+            if ($request->hasFile('dokumen_perjanjian')) {
+                $file = $request->file('dokumen_perjanjian');
+                $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_toko);
+                $filename = 'perjanjian_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('uploads/dokumen'), $filename);
+                $dokumenPath = 'uploads/dokumen/' . $filename;
+            }
+
             // Check if user already has UMKM store
             $umkm = Tumkm::where('user_id', $userId)->first();
 
@@ -116,12 +169,21 @@ class UmkmController extends Controller
                     $updateData['foto_toko'] = $fotoTokoPath;
                 }
                 
-                // Add optional fields
+                if ($dokumenPath) {
+                    $updateData['dokumen_perjanjian'] = $dokumenPath;
+                }
+                
                 if ($request->whatsapp) $updateData['whatsapp'] = $request->whatsapp;
                 if ($request->telepon) $updateData['telepon'] = $request->telepon;
                 if ($request->email) $updateData['email'] = $request->email;
                 if ($request->instagram) $updateData['instagram'] = $request->instagram;
                 if ($request->about_me) $updateData['about_me'] = $request->about_me;
+                if ($request->paroki) $updateData['paroki'] = $request->paroki;
+                if ($request->umat) $updateData['umat'] = $request->umat;
+                if ($request->nama_bank) $updateData['nama_bank'] = $request->nama_bank;
+                if ($request->no_rekening) $updateData['no_rekening'] = $request->no_rekening;
+                if ($request->atas_nama_rekening) $updateData['atas_nama_rekening'] = $request->atas_nama_rekening;
+                $updateData['menyediakan_jasa_kirim'] = filter_var($request->menyediakan_jasa_kirim, FILTER_VALIDATE_BOOLEAN);
 
                 $umkm->update($updateData);
             } else {
@@ -139,12 +201,21 @@ class UmkmController extends Controller
                     $createData['foto_toko'] = $fotoTokoPath;
                 }
                 
-                // Add optional fields
+                if ($dokumenPath) {
+                    $createData['dokumen_perjanjian'] = $dokumenPath;
+                }
+                
                 if ($request->whatsapp) $createData['whatsapp'] = $request->whatsapp;
                 if ($request->telepon) $createData['telepon'] = $request->telepon;
                 if ($request->email) $createData['email'] = $request->email;
                 if ($request->instagram) $createData['instagram'] = $request->instagram;
                 if ($request->about_me) $createData['about_me'] = $request->about_me;
+                if ($request->paroki) $createData['paroki'] = $request->paroki;
+                if ($request->umat) $createData['umat'] = $request->umat;
+                if ($request->nama_bank) $createData['nama_bank'] = $request->nama_bank;
+                if ($request->no_rekening) $createData['no_rekening'] = $request->no_rekening;
+                if ($request->atas_nama_rekening) $createData['atas_nama_rekening'] = $request->atas_nama_rekening;
+                $createData['menyediakan_jasa_kirim'] = filter_var($request->menyediakan_jasa_kirim, FILTER_VALIDATE_BOOLEAN);
 
                 $umkm = Tumkm::create($createData);
             }
@@ -202,13 +273,40 @@ class UmkmController extends Controller
                     'kategori' => $produk['kategori'] ?? 'product',
                     'stok' => $produk['stok'] ?? 0,
                     'gambar' => $gambarPath,
-                    'status' => 'active',
+                    'status' => 'pending', // Products start as pending, waiting for admin approval
+                    'approval_status' => 'pending', // Track approval status separately
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
 
             DB::commit();
+
+            // Notify admins about new UMKM registration
+            try {
+                $productCount = count($produkArray);
+                $whatsappNumber = $request->whatsapp ?? '';
+                
+                // Send in-app notifications to all admins
+                NotificationService::notifyAdminNewUmkm(
+                    $request->nama_toko,
+                    $request->nama_pemilik,
+                    $productCount
+                );
+                
+                // Send WhatsApp notification to admin
+                NotificationService::sendWhatsAppToAdmin(
+                    $request->nama_toko,
+                    $request->nama_pemilik,
+                    $whatsappNumber,
+                    $productCount
+                );
+                
+                \Log::info("Admin notifications sent for new UMKM: " . $request->nama_toko);
+            } catch (\Exception $notifError) {
+                // Don't fail the submission if notification fails
+                \Log::warning("Failed to send admin notifications: " . $notifError->getMessage());
+            }
 
             return response()->json([
                 'success' => true,
@@ -249,7 +347,7 @@ class UmkmController extends Controller
     public function show($id)
     {
         try {
-            $umkm = Tumkm::with(['user', 'category', 'products'])
+            $umkm = Tumkm::with(['user', 'category', 'products.images'])
                 ->where('id', $id)
                 ->first();
 
@@ -276,16 +374,51 @@ class UmkmController extends Controller
     public function getPending()
     {
         try {
-            $umkm = Tumkm::with(['user', 'category', 'products'])
+            $umkm = Tumkm::with(['user', 'category'])
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
+            // Transform to array and manually add products
+            $result = [];
+            foreach ($umkm as $store) {
+                $storeArray = $store->toArray();
+                
+                // Explicitly add fields that may not be in toArray() due to schema caching
+                // Get raw data from database to ensure all fields are included
+                $rawStore = DB::table('tumkm')->where('id', $store->id)->first();
+                \Log::info("getPending DEBUG - Store ID: {$store->id}, rawStore: " . ($rawStore ? 'FOUND' : 'NULL'));
+                if ($rawStore) {
+                    \Log::info("getPending DEBUG - rawStore paroki: " . ($rawStore->paroki ?? 'PROPERTY NULL'));
+                    $storeArray['paroki'] = $rawStore->paroki ?? null;
+                    $storeArray['umat'] = $rawStore->umat ?? null;
+                    $storeArray['nama_bank'] = $rawStore->nama_bank ?? null;
+                    $storeArray['no_rekening'] = $rawStore->no_rekening ?? null;
+                    $storeArray['atas_nama_rekening'] = $rawStore->atas_nama_rekening ?? null;
+                    $storeArray['dokumen_perjanjian'] = $rawStore->dokumen_perjanjian ?? null;
+                    $storeArray['menyediakan_jasa_kirim'] = $rawStore->menyediakan_jasa_kirim ?? false;
+                    $storeArray['about_me'] = $rawStore->about_me ?? null;
+                    \Log::info("getPending DEBUG - after assignment paroki: " . ($storeArray['paroki'] ?? 'ARRAY KEY NULL'));
+                }
+                
+                // Manually load products using direct DB query
+                $products = DB::table('tproduk')
+                    ->where('umkm_id', $store->id)
+                    ->get()
+                    ->toArray();
+                
+                $storeArray['products'] = $products;
+                $result[] = $storeArray;
+                
+                \Log::info("Store {$store->id} ({$store->nama_toko}) has " . count($products) . " products");
+            }
+
             return response()->json([
                 'success' => true,
-                'data' => $umkm
+                'data' => $result
             ], 200);
         } catch (\Exception $e) {
+            \Log::error("getPending error: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch pending UMKM stores',
@@ -322,7 +455,7 @@ class UmkmController extends Controller
         }
     }
 
-    public function rejectStore($id)
+    public function rejectStore(Request $request, $id)
     {
         try {
             $umkm = Tumkm::find($id);
@@ -334,14 +467,50 @@ class UmkmController extends Controller
                 ], 404);
             }
 
+            // Get rejection reason from request
+            $reason = $request->input('reason') ?? $request->input('comment') ?? 'Pengajuan toko ditolak oleh admin';
+            $adminId = $request->header('X-User-ID', 1);
+
+            DB::beginTransaction();
+
+            // 1. Reject the store
             $umkm->update(['status' => 'rejected']);
+
+            // 2. Auto-reject all products in this store
+            DB::table('tproduk')
+                ->where('umkm_id', $id)
+                ->update([
+                    'status' => 'inactive',
+                    'approval_status' => 'rejected',
+                    'updated_at' => now()
+                ]);
+
+            // 3. Save rejection comment
+            DB::table('umkm_rejection_comments')->insert([
+                'kodepengguna' => $umkm->user_id,
+                'comment' => $reason,
+                'status' => 'rejected',
+                'admin_id' => $adminId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            \Log::info("UMKM store rejected with all products", [
+                'umkm_id' => $id,
+                'reason' => $reason
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'UMKM store rejected',
+                'message' => 'Toko dan semua produk berhasil ditolak',
                 'data' => $umkm
             ], 200);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("rejectStore error: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reject UMKM store',
@@ -406,12 +575,16 @@ class UmkmController extends Controller
                 'nama_toko' => 'nullable|string|max:255',
                 'nama_pemilik' => 'nullable|string|max:255',
                 'deskripsi' => 'nullable|string',
-                'foto_toko' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:5120',
+                'foto_toko' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
                 'whatsapp' => 'nullable|string|max:20',
                 'telepon' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'instagram' => 'nullable|string|max:100',
                 'about_me' => 'nullable|string',
+                'nama_bank' => 'nullable|string|max:100',
+                'no_rekening' => 'nullable|string|max:50',
+                'atas_nama_rekening' => 'nullable|string|max:255',
+                'menyediakan_jasa_kirim' => 'nullable|in:0,1,true,false',
             ]);
 
             if ($validator->fails()) {
@@ -431,8 +604,16 @@ class UmkmController extends Controller
                 'telepon',
                 'email',
                 'instagram',
-                'about_me'
+                'about_me',
+                'nama_bank',
+                'no_rekening',
+                'atas_nama_rekening'
             ]);
+
+            // Handle menyediakan_jasa_kirim boolean
+            if ($request->has('menyediakan_jasa_kirim')) {
+                $updateData['menyediakan_jasa_kirim'] = filter_var($request->menyediakan_jasa_kirim, FILTER_VALIDATE_BOOLEAN);
+            }
 
             if ($request->hasFile('foto_toko')) {
                 \Log::info('📸 New image file received: ' . $request->file('foto_toko')->getClientOriginalName());
@@ -455,6 +636,20 @@ class UmkmController extends Controller
             }
 
             $umkm->update($updateData);
+
+            // Reverse sync: UMKM → User profile
+            if ($umkm->user_id) {
+                $userUpdate = [];
+                if (isset($updateData['whatsapp']) && $updateData['whatsapp']) {
+                    $userUpdate['no_telepon'] = $updateData['whatsapp'];
+                }
+                if (isset($updateData['nama_pemilik']) && $updateData['nama_pemilik']) {
+                    $userUpdate['nama_lengkap'] = $updateData['nama_pemilik'];
+                }
+                if (!empty($userUpdate)) {
+                    User::where('id', $umkm->user_id)->update($userUpdate);
+                }
+            }
 
             return response()->json([
                 'success' => true,
@@ -509,7 +704,7 @@ class UmkmController extends Controller
                 'deskripsi' => 'nullable|string',
                 'harga' => 'nullable|numeric|min:0',
                 'kategori' => 'nullable|string|max:50',
-                'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:5120',
+                'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -625,8 +820,9 @@ class UmkmController extends Controller
             // Save UMKM rejection comment if rejected
             if ($finalUmkmStatus === 'rejected' && $request->umkm_comment) {
                 DB::table('umkm_rejection_comments')->insert([
-                    'umkm_id' => $umkm->id,
+                    'kodepengguna' => $umkm->user_id,
                     'comment' => $request->umkm_comment,
+                    'status' => 'rejected',
                     'admin_id' => $request->header('X-User-ID', 1),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -651,6 +847,7 @@ class UmkmController extends Controller
                             ->where('id', $productId)
                             ->update([
                                 'status' => 'active',
+                                'approval_status' => 'approved',
                                 'updated_at' => now()
                             ]);
                     } else {
@@ -659,6 +856,7 @@ class UmkmController extends Controller
                             ->where('id', $productId)
                             ->update([
                                 'status' => 'inactive',
+                                'approval_status' => 'rejected',
                                 'updated_at' => now()
                             ]);
 
@@ -751,6 +949,21 @@ class UmkmController extends Controller
 
             \Log::info("UMKM found: ID {$umkm->id}, Name: {$umkm->nama_toko}");
 
+            // Get UMKM rejection comments - include store name and image
+            $umkmComments = DB::table('umkm_rejection_comments')
+                ->where('kodepengguna', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($comment) use ($umkm) {
+                    $comment->nama_toko = $umkm->nama_toko;
+                    $comment->foto_toko = $umkm->foto_toko;
+                    return $comment;
+                });
+
+            \Log::info("UMKM comments found: " . $umkmComments->count());
+
+            $result['umkm_comments'] = $umkmComments;
+
             // Get product rejection comments for this user's products
             $productComments = DB::table('product_rejection_comments as prc')
                 ->join('tproduk as p', function($join) {
@@ -760,7 +973,8 @@ class UmkmController extends Controller
                 ->select(
                     'prc.*',
                     'p.nama_produk',
-                    'p.id as product_id'
+                    'p.id as product_id',
+                    'p.gambar as product_image'
                 )
                 ->orderBy('prc.created_at', 'desc')
                 ->get();
@@ -817,7 +1031,8 @@ class UmkmController extends Controller
                 'deskripsi' => 'nullable|string',
                 'stok' => 'nullable|integer|min:0',
                 'kategori' => 'nullable|string|max:50',
-                'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+                'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
+            'gambar_tambahan.*' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -852,20 +1067,94 @@ class UmkmController extends Controller
                 'deskripsi' => $request->deskripsi ?? '',
                 'gambar' => $gambarPath,
                 'kategori' => $request->kategori ?? 'product',
-                'approval_status' => 'pending', // Requires admin approval
+                'approval_status' => 'pending',
                 'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
 
-            $product = DB::table('tproduk')->where('id', $productId)->first();
+            // Handle additional images
+            if ($request->hasFile('gambar_tambahan')) {
+                $extraFiles = $request->file('gambar_tambahan');
+                $sortOrder = 1;
+                foreach ($extraFiles as $extraFile) {
+                    $extraFilename = 'product_' . $umkm->id . '_' . time() . '_' . $sortOrder . '.' . $extraFile->getClientOriginalExtension();
+                    $extraFile->move(public_path('uploads/products'), $extraFilename);
+                    
+                    DB::table('product_images')->insert([
+                        'product_id' => $productId,
+                        'image_path' => 'uploads/products/' . $extraFilename,
+                        'sort_order' => $sortOrder,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $sortOrder++;
+                }
+            }
 
-            \Log::info("New product added", ['product_id' => $productId, 'umkm_id' => $umkm->id, 'user_id' => $userId]);
+            $product = DB::table('tproduk')->where('id', $productId)->first();
+            $extraImages = DB::table('product_images')->where('product_id', $productId)->orderBy('sort_order')->pluck('image_path')->toArray();
+
+            $allImages = [];
+            if ($product->gambar) {
+                $allImages[] = $product->gambar;
+            }
+            $allImages = array_merge($allImages, $extraImages);
+
+            // Handle variants
+            if ($request->has('variants')) {
+                $variants = is_string($request->variants) ? json_decode($request->variants, true) : $request->variants;
+                if ($variants && is_array($variants)) {
+                    $globalOptIdx = 0; // tracks flat index across all options for variant_images matching
+                    foreach ($variants as $typeIndex => $variantType) {
+                        $typeId = DB::table('product_variant_types')->insertGetId([
+                            'product_id' => $productId,
+                            'name' => $variantType['name'],
+                            'display_order' => $typeIndex,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        if (isset($variantType['options']) && is_array($variantType['options'])) {
+                            foreach ($variantType['options'] as $optIndex => $option) {
+                                // Handle variant option image upload
+                                $optionImagePath = null;
+                                if ($request->hasFile("variant_images.$globalOptIdx")) {
+                                    $vFile = $request->file("variant_images.$globalOptIdx");
+                                    if (!file_exists(public_path('uploads/variants'))) {
+                                        mkdir(public_path('uploads/variants'), 0777, true);
+                                    }
+                                    $vFilename = 'variant_' . $productId . '_' . $typeIndex . '_' . $optIndex . '_' . time() . '.' . $vFile->getClientOriginalExtension();
+                                    $vFile->move(public_path('uploads/variants'), $vFilename);
+                                    $optionImagePath = 'uploads/variants/' . $vFilename;
+                                }
+
+                                DB::table('product_variant_options')->insert([
+                                    'variant_type_id' => $typeId,
+                                    'value' => $option['value'],
+                                    'image' => $optionImagePath,
+                                    'price_adjustment' => $option['price_adjustment'] ?? 0,
+                                    'stock' => $option['stock'] ?? null,
+                                    'display_order' => $optIndex,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                                $globalOptIdx++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $productData = (array) $product;
+            $productData['images'] = $allImages;
+
+            \Log::info("New product added", ['product_id' => $productId, 'umkm_id' => $umkm->id, 'user_id' => $userId, 'total_images' => count($allImages)]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Produk berhasil ditambahkan. Menunggu persetujuan admin.',
-                'data' => $product
+                'data' => $productData
             ], 201);
 
         } catch (\Exception $e) {
@@ -887,6 +1176,8 @@ class UmkmController extends Controller
             $products = DB::table('tproduk')
                 ->join('tumkm', 'tproduk.umkm_id', '=', 'tumkm.id')
                 ->where('tproduk.approval_status', 'pending')
+                ->where('tumkm.status', 'active') // Only from approved stores!
+                ->whereRaw('LOWER(COALESCE(tproduk.kategori, \'\')) != ?', ['paket']) // Exclude gift packages
                 ->select(
                     'tproduk.id',
                     'tproduk.nama_produk',
@@ -954,6 +1245,146 @@ class UmkmController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to approve product',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resubmit rejected UMKM store for review
+     */
+    public function resubmitStore(Request $request, $id)
+    {
+        try {
+            $store = DB::table('tumkm')->where('id', $id)->first();
+
+            if (!$store) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Store not found'
+                ], 404);
+            }
+
+            // Check if store belongs to user
+            $userId = $request->header('X-User-ID');
+            if ($store->user_id != $userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
+            // Check if store is rejected
+            if ($store->status !== 'rejected') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only rejected stores can be resubmitted'
+                ], 400);
+            }
+
+            // Build update data - only include fields if provided
+            $updateData = [
+                'status' => 'pending', // Set back to pending for review
+                'updated_at' => now()
+            ];
+
+            // Add store data fields if provided
+            if ($request->has('nama_toko')) {
+                $updateData['nama_toko'] = $request->input('nama_toko');
+            }
+            if ($request->has('nama_pemilik')) {
+                $updateData['nama_pemilik'] = $request->input('nama_pemilik');
+            }
+            if ($request->has('alamat_toko') || $request->has('alamat')) {
+                $updateData['alamat'] = $request->input('alamat_toko') ?? $request->input('alamat');
+            }
+            if ($request->has('whatsapp')) {
+                $updateData['whatsapp'] = $request->input('whatsapp');
+            }
+            
+            // Update basic fields first
+            DB::table('tumkm')->where('id', $id)->update($updateData);
+            
+            // Try to update optional fields (may not exist in all database schemas)
+            $optionalFields = [];
+            if ($request->has('paroki')) {
+                $optionalFields['paroki'] = $request->input('paroki');
+            }
+            if ($request->has('umat')) {
+                $optionalFields['umat'] = $request->input('umat');
+            }
+            if ($request->has('nama_bank')) {
+                $optionalFields['nama_bank'] = $request->input('nama_bank');
+            }
+            if ($request->has('no_rekening')) {
+                $optionalFields['no_rekening'] = $request->input('no_rekening');
+            }
+            if ($request->has('atas_nama')) {
+                $optionalFields['atas_nama'] = $request->input('atas_nama');
+            }
+            if ($request->has('about')) {
+                $optionalFields['about'] = $request->input('about');
+            }
+            if ($request->has('jasa_kirim')) {
+                $optionalFields['jasa_kirim'] = $request->boolean('jasa_kirim') ? 1 : 0;
+            }
+            
+            // Try to update optional fields one by one
+            foreach ($optionalFields as $field => $value) {
+                try {
+                    DB::table('tumkm')->where('id', $id)->update([$field => $value]);
+                } catch (\Exception $e) {
+                    \Log::info("Could not update field $field: " . $e->getMessage());
+                }
+            }
+
+            // Delete rejection comments since store is being resubmitted
+            try {
+                DB::table('rejection_comments')
+                    ->where('kodepengguna', 'U' . $store->user_id)
+                    ->delete();
+            } catch (\Exception $e) {
+                // Ignore if table doesn't exist
+                \Log::info("Could not delete rejection comments: " . $e->getMessage());
+            }
+
+            // Also reset all products back to pending for re-review
+            $productsUpdated = DB::table('tproduk')
+                ->where('umkm_id', $id)
+                ->update([
+                    'status' => 'active',
+                    'approval_status' => 'pending',
+                    'updated_at' => now()
+                ]);
+
+            // Delete product rejection comments too
+            try {
+                $productIds = DB::table('tproduk')->where('umkm_id', $id)->pluck('id');
+                if ($productIds->count() > 0) {
+                    $kodeProdukList = $productIds->map(fn($pid) => 'P' . $pid)->toArray();
+                    DB::table('product_rejection_comments')
+                        ->whereIn('kodeproduk', $kodeProdukList)
+                        ->delete();
+                }
+            } catch (\Exception $e) {
+                \Log::info("Could not delete product rejection comments: " . $e->getMessage());
+            }
+
+            \Log::info("Store resubmitted for review", [
+                'store_id' => $id,
+                'user_id' => $userId
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Toko berhasil dikirim ulang untuk ditinjau admin'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Error resubmitting store: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resubmit store',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -1087,19 +1518,25 @@ class UmkmController extends Controller
     public function resubmitProduct(Request $request, $id)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'nama_produk' => 'required|string|max:255',
-                'deskripsi' => 'required|string',
-                'harga' => 'required|numeric|min:0',
-                'kategori' => 'required|string',
-            ]);
+            // Check if request has product data (for edit+resubmit flow)
+            $hasProductData = $request->has('nama_produk') || $request->has('deskripsi');
+            
+            // Only validate if product data is being updated
+            if ($hasProductData) {
+                $validator = Validator::make($request->all(), [
+                    'nama_produk' => 'required|string|max:255',
+                    'deskripsi' => 'required|string',
+                    'harga' => 'required|numeric|min:0',
+                    'kategori' => 'required|string',
+                ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                if ($validator->fails()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
             }
 
             $product = DB::table('tproduk')->where('id', $id)->first();
@@ -1144,16 +1581,26 @@ class UmkmController extends Controller
                 ], 400);
             }
 
-            // Update product data
+            // Update product data - only include fields if provided
             $updateData = [
-                'nama_produk' => $request->input('nama_produk'),
-                'deskripsi' => $request->input('deskripsi'),
-                'harga' => $request->input('harga'),
-                'kategori' => $request->input('kategori'),
                 'approval_status' => 'pending', // Set back to pending for review
                 'status' => 'active', // Set status as active
                 'updated_at' => now()
             ];
+            
+            // Only add product data fields if they were provided (edit+resubmit flow)
+            if ($request->has('nama_produk')) {
+                $updateData['nama_produk'] = $request->input('nama_produk');
+            }
+            if ($request->has('deskripsi')) {
+                $updateData['deskripsi'] = $request->input('deskripsi');
+            }
+            if ($request->has('harga')) {
+                $updateData['harga'] = $request->input('harga');
+            }
+            if ($request->has('kategori')) {
+                $updateData['kategori'] = $request->input('kategori');
+            }
 
             // Handle image upload if provided
             if ($request->hasFile('gambar')) {
@@ -1289,8 +1736,9 @@ class UmkmController extends Controller
 
                     // Save rejection comment
                     DB::table('umkm_rejection_comments')->insert([
-                        'umkm_id' => $umkm->id,
+                        'kodepengguna' => $umkm->user_id,
                         'comment' => $reason,
+                        'status' => 'rejected',
                         'admin_id' => $adminId,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -1356,6 +1804,126 @@ class UmkmController extends Controller
     }
 
     /**
+     * Admin update UMKM store (admin only) - can update all fields
+     */
+    public function adminUpdate(Request $request, $id)
+    {
+        try {
+            $umkm = Tumkm::find($id);
+
+            if (!$umkm) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'UMKM store not found'
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'nama_toko' => 'nullable|string|max:255',
+                'nama_pemilik' => 'nullable|string|max:255',
+                'deskripsi' => 'nullable|string',
+                'foto_toko' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+                'whatsapp' => 'nullable|string|max:20',
+                'telepon' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'instagram' => 'nullable|string|max:100',
+                'about_me' => 'nullable|string',
+                'alamat' => 'nullable|string',
+                'kota' => 'nullable|string|max:100',
+                'kode_pos' => 'nullable|string|max:10',
+                'status' => 'nullable|string|in:pending,active,rejected,inactive',
+                'kategori_id' => 'nullable|integer|exists:categories,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Collect update data
+            $updateData = $request->only([
+                'nama_toko',
+                'nama_pemilik',
+                'deskripsi',
+                'whatsapp',
+                'telepon',
+                'email',
+                'instagram',
+                'about_me',
+                'alamat',
+                'kota',
+                'kode_pos',
+                'status',
+                'kategori_id'
+            ]);
+
+            // Filter out null values
+            $updateData = array_filter($updateData, function($value) {
+                return $value !== null && $value !== '';
+            });
+
+            // Handle file upload
+            if ($request->hasFile('foto_toko')) {
+                \Log::info('📸 Admin updating image: ' . $request->file('foto_toko')->getClientOriginalName());
+
+                // Delete old image if exists
+                if ($umkm->foto_toko && file_exists(public_path($umkm->foto_toko))) {
+                    \Log::info('🗑️ Deleting old image: ' . $umkm->foto_toko);
+                    unlink(public_path($umkm->foto_toko));
+                }
+
+                // Save new image
+                $file = $request->file('foto_toko');
+                $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_toko ?? $umkm->nama_toko ?? 'toko');
+                $filename = 'toko_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
+                
+                if (!file_exists(public_path('uploads/toko'))) {
+                    mkdir(public_path('uploads/toko'), 0777, true);
+                }
+                
+                $file->move(public_path('uploads/toko'), $filename);
+                $updateData['foto_toko'] = 'uploads/toko/' . $filename;
+                \Log::info('✅ Image saved: ' . $updateData['foto_toko']);
+            }
+
+            $umkm->update($updateData);
+
+            // Reverse sync: UMKM → User profile
+            if ($umkm->user_id) {
+                $userUpdate = [];
+                if (isset($updateData['whatsapp']) && $updateData['whatsapp']) {
+                    $userUpdate['no_telepon'] = $updateData['whatsapp'];
+                }
+                if (isset($updateData['nama_pemilik']) && $updateData['nama_pemilik']) {
+                    $userUpdate['nama_lengkap'] = $updateData['nama_pemilik'];
+                }
+                if (!empty($userUpdate)) {
+                    User::where('id', $umkm->user_id)->update($userUpdate);
+                }
+            }
+
+            \Log::info("Admin updated UMKM", ['umkm_id' => $id, 'admin_id' => $request->header('X-Admin-ID')]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'UMKM store updated successfully',
+                'data' => $umkm->fresh()
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error("Error in adminUpdate: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update UMKM store',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Delete UMKM store and all its products (admin only)
      */
     public function destroy($id)
@@ -1380,7 +1948,7 @@ class UmkmController extends Controller
 
             // Delete UMKM rejection comments if table exists
             try {
-                DB::table('umkm_rejection_comments')->where('umkm_id', $umkm->id)->delete();
+                DB::table('umkm_rejection_comments')->where('kodepengguna', $umkm->user_id)->delete();
             } catch (\Exception $e) {
                 \Log::warning("Could not delete umkm_rejection_comments: " . $e->getMessage());
             }

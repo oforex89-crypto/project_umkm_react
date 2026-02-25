@@ -15,7 +15,7 @@ class ImageController extends Controller
     public function upload(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
             'type' => 'required|in:umkm,product',
             'optimize' => 'boolean'
         ]);
@@ -140,7 +140,7 @@ class ImageController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
             'old_path' => 'nullable|string',
             'type' => 'required|in:umkm,product'
         ]);

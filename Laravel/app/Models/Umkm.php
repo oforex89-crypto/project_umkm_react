@@ -20,7 +20,8 @@ class Umkm extends Model
         'kode_kategori',
         'no_whatsapp',
         'status_verifikasi_wa',
-        'status'
+        'status',
+        'menyediakan_jasa_kirim'
     ];
 
     public function user()

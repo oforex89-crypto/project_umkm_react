@@ -27,61 +27,125 @@ class RoleUpgradeRequestController extends Controller
     // Check if user has existing request
     public function checkUserRequest($userId)
     {
-        // userId is from users.id, not kodepengguna
-        // So we need to generate kodepengguna from userId
-        $kodepengguna = 'U' . str_pad($userId, 3, '0', STR_PAD_LEFT);
-        
-        // Check in tumkm table (actual UMKM submissions)
-        $umkmRequest = Tumkm::where('kodepengguna', $kodepengguna)->first();
-
-        if ($umkmRequest) {
-            // Get category name
-            $category = \DB::table('tkategori')
-                ->where('kodekategori', $umkmRequest->kodekategori)
+        try {
+            \Log::info('checkUserRequest called', ['userId' => $userId]);
+            
+            // FIRST: Check modern tumkm table with user_id
+            $modernUmkm = \DB::table('tumkm')
+                ->where('user_id', $userId)
                 ->first();
             
-            // Get products
-            $products = \DB::table('tproduk')
-                ->where('kodepengguna', $kodepengguna)
-                ->select(
-                    'kodeproduk as id',
-                    'namaproduk as nama_produk',
-                    'harga',
-                    'stok',
-                    'detail as deskripsi',
-                    'gambarproduk as gambar'
-                )
-                ->get();
+            if ($modernUmkm) {
+                \Log::info('Found modern UMKM', ['id' => $modernUmkm->id]);
+                
+                // Get category name from modern categories table
+                $category = \DB::table('categories')
+                    ->where('id', $modernUmkm->kategori_id)
+                    ->first();
+                
+                // Get products from modern tproduk table
+                $products = \DB::table('tproduk')
+                    ->where('umkm_id', $modernUmkm->id)
+                    ->select(
+                        'id',
+                        'nama_produk',
+                        'harga',
+                        'stok',
+                        'deskripsi',
+                        'gambar',
+                        'status',
+                        'approval_status'
+                    )
+                    ->get();
+                
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'id' => $modernUmkm->id,
+                        'nama_toko' => $modernUmkm->nama_toko,
+                        'nama_pemilik' => $modernUmkm->nama_pemilik,
+                        'alamat_toko' => $modernUmkm->alamat ?? '',
+                        'whatsapp' => $modernUmkm->whatsapp ?? '',
+                        'foto_toko' => $modernUmkm->foto_toko,
+                        'status' => $modernUmkm->status,
+                        'kategori' => $category->nama_kategori ?? 'Unknown',
+                        'products' => $products,
+                        // Paroki info
+                        'paroki' => $modernUmkm->paroki ?? '',
+                        'umat' => $modernUmkm->umat ?? '',
+                        // Bank info
+                        'nama_bank' => $modernUmkm->nama_bank ?? '',
+                        'no_rekening' => $modernUmkm->no_rekening ?? '',
+                        'atas_nama' => $modernUmkm->atas_nama ?? '',
+                        // Additional info
+                        'about' => $modernUmkm->about ?? '',
+                        'jasa_kirim' => $modernUmkm->jasa_kirim ?? false,
+                    ]
+                ], 200);
+            }
             
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $umkmRequest->kodepengguna,
-                    'nama_toko' => $umkmRequest->namatoko,
-                    'nama_pemilik' => $umkmRequest->namapemilik,
-                    'alamat_toko' => $umkmRequest->alamattoko,
-                    'foto_toko' => $umkmRequest->fototoko,
-                    'status' => $umkmRequest->statuspengajuan,
-                    'kategori' => $category->namakategori ?? 'Unknown',
-                    'products' => $products
-                ]
-            ], 200);
-        }
-        
-        // Fallback: check old BusinessSubmission table
-        $request = BusinessSubmission::where('kodepengguna', $kodepengguna)->first();
-
-        if (!$request) {
+            // SECOND: Try legacy format (kodepengguna = U001, U002, etc)
+            $kodepengguna = 'U' . str_pad($userId, 3, '0', STR_PAD_LEFT);
+            
+            // Check in legacy tumkm table
+            if (\Schema::hasColumn('tumkm', 'kodepengguna')) {
+                $legacyUmkm = \DB::table('tumkm')
+                    ->where('kodepengguna', $kodepengguna)
+                    ->first();
+                
+                if ($legacyUmkm) {
+                    // Get category name
+                    $category = \DB::table('tkategori')
+                        ->where('kodekategori', $legacyUmkm->kodekategori ?? '')
+                        ->first();
+                    
+                    // Get products
+                    $products = \DB::table('tproduk')
+                        ->where('kodepengguna', $kodepengguna)
+                        ->select(
+                            'kodeproduk as id',
+                            'namaproduk as nama_produk',
+                            'harga',
+                            'stok',
+                            'detail as deskripsi',
+                            'gambarproduk as gambar'
+                        )
+                        ->get();
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'id' => $legacyUmkm->kodepengguna ?? $userId,
+                            'nama_toko' => $legacyUmkm->namatoko ?? '',
+                            'nama_pemilik' => $legacyUmkm->namapemilik ?? '',
+                            'alamat_toko' => $legacyUmkm->alamattoko ?? '',
+                            'foto_toko' => $legacyUmkm->fototoko ?? '',
+                            'status' => $legacyUmkm->statuspengajuan ?? 'pending',
+                            'kategori' => $category->namakategori ?? 'Unknown',
+                            'products' => $products
+                        ]
+                    ], 200);
+                }
+            }
+            
+            // No UMKM found
             return response()->json([
                 'success' => false,
                 'message' => 'No request found'
             ], 404);
+            
+        } catch (\Exception $e) {
+            \Log::error('checkUserRequest error', [
+                'userId' => $userId,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $request
-        ], 200);
     }
 
     // Submit or update request
@@ -171,8 +235,8 @@ class RoleUpgradeRequestController extends Controller
 
         // Update user role (use userId from parameter, not kodepengguna)
         $user = User::find($userId);
-        if ($user && $user->role !== 'umkm_owner') {
-            $user->update(['role' => 'umkm_owner']);
+        if ($user && $user->role !== 'umkm') {
+            $user->update(['role' => 'umkm']);
         }
 
         return response()->json([

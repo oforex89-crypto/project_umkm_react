@@ -83,16 +83,36 @@ class RoleRequestController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
-        // Check if user already has pending request
+        // Check if user already has ANY request (not just pending)
         $existingRequest = RoleRequest::where('user_id', $validated['user_id'])
-            ->where('status_pengajuan', 'pending')
             ->first();
 
         if ($existingRequest) {
+            if ($existingRequest->status_pengajuan === 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda sudah memiliki permintaan yang sedang diproses'
+                ], 422);
+            }
+
+            if ($existingRequest->status_pengajuan === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Permintaan Anda sudah disetujui'
+                ], 422);
+            }
+
+            // For rejected or other status, update the existing request
+            $existingRequest->update([
+                'alasan_pengajuan' => $validated['reason'] ?? 'Ingin menjadi UMKM Owner',
+                'status_pengajuan' => 'pending',
+            ]);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah memiliki permintaan yang sedang diproses'
-            ], 422);
+                'success' => true,
+                'message' => 'Permintaan upgrade role berhasil diperbarui',
+                'data' => $existingRequest
+            ], 200);
         }
 
         // Get user data for required fields
@@ -104,10 +124,10 @@ class RoleRequestController extends Controller
             ], 404);
         }
 
-        if ($user->role === 'umkm_owner') {
+        if ($user->role === 'umkm') {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda sudah menjadi UMKM Owner'
+                'message' => 'Anda sudah menjadi UMKM'
             ], 422);
         }
 
@@ -176,7 +196,7 @@ class RoleRequestController extends Controller
         // Update user role
         $user = User::find($roleRequest->user_id);
         if ($user) {
-            $user->update(['role' => 'umkm_owner']);
+            $user->update(['role' => 'umkm']);
         }
 
         return response()->json([

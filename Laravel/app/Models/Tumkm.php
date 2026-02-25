@@ -31,6 +31,14 @@ class Tumkm extends Model
         'kota',
         'kode_pos',
         'status',
+        // Additional fields
+        'paroki',
+        'umat',
+        'nama_bank',
+        'no_rekening',
+        'atas_nama_rekening',
+        'dokumen_perjanjian',
+        'menyediakan_jasa_kirim',
     ];
 
     // Relationships

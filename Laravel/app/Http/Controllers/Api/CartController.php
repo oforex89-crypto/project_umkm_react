@@ -14,53 +14,72 @@ class CartController extends Controller
     // Get cart items dengan info UMKM
     public function index($userId)
     {
-        $cartItems = CartItem::with(['product.user'])
+        $cartItems = CartItem::with(['product.umkm'])
             ->where('user_id', $userId)
             ->get();
 
         // Transform to include business info
         $formattedItems = $cartItems->map(function ($item) {
+            if (!$item->product) {
+                return null;
+            }
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
-                'product_name' => $item->product->nama,
+                'product_name' => $item->product->nama_produk,
                 'product_price' => $item->product->harga,
                 'quantity' => $item->jumlah,
                 'subtotal' => $item->product->harga * $item->jumlah,
-                'business' => [
-                    'id' => $item->product->user_id,
-                    'name' => $item->product->user->nama,
-                    'phone' => $item->product->user->telepon,
-                ]
+                'product' => [
+                    'gambar' => $item->product->gambar,
+                    'deskripsi' => $item->product->deskripsi,
+                    'kategori' => $item->product->kategori,
+                    'stok' => $item->product->stok,
+                    'umkm' => $item->product->umkm ? [
+                        'id' => $item->product->umkm->id,
+                        'nama_toko' => $item->product->umkm->nama_toko,
+                        'whatsapp' => $item->product->umkm->whatsapp,
+                        'menyediakan_jasa_kirim' => $item->product->umkm->menyediakan_jasa_kirim,
+                        'nama_bank' => $item->product->umkm->nama_bank,
+                        'no_rekening' => $item->product->umkm->no_rekening,
+                        'atas_nama_rekening' => $item->product->umkm->atas_nama_rekening,
+                    ] : null,
+                ],
+                'business' => $item->product->umkm ? [
+                    'id' => $item->product->umkm->id,
+                    'name' => $item->product->umkm->nama_toko,
+                    'phone' => $item->product->umkm->whatsapp,
+                ] : null
             ];
-        });
+        })->filter();
 
         return response()->json([
             'success' => true,
-            'data' => $formattedItems
+            'data' => $formattedItems->values()
         ], 200);
     }
 
     // Get cart items grouped by UMKM
     public function getGroupedByBusiness($userId)
     {
-        $cartItems = CartItem::with(['product.user'])
+        $cartItems = CartItem::with(['product.umkm'])
             ->where('user_id', $userId)
             ->get();
 
-        // Group by business
+        // Group by UMKM
         $grouped = $cartItems->groupBy(function ($item) {
-            return $item->product->user_id;
+            return $item->product->umkm_id ?? 0;
         });
 
         $result = $grouped->map(function ($items, $businessId) {
-            $business = $items->first()->product->user;
+            $umkm = $items->first()->product->umkm;
             $itemsList = $items->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
-                    'product_name' => $item->product->nama,
+                    'product_name' => $item->product->nama_produk,
                     'product_price' => $item->product->harga,
+                    'product_image' => $item->product->gambar,
                     'quantity' => $item->jumlah,
                     'subtotal' => $item->product->harga * $item->jumlah,
                 ];
@@ -70,8 +89,9 @@ class CartController extends Controller
 
             return [
                 'business_id' => $businessId,
-                'business_name' => $business->nama,
-                'business_phone' => $business->telepon,
+                'business_name' => $umkm ? $umkm->nama_toko : 'Unknown',
+                'business_phone' => $umkm ? $umkm->whatsapp : '',
+                'menyediakan_jasa_kirim' => $umkm ? $umkm->menyediakan_jasa_kirim : false,
                 'items' => $itemsList->values(),
                 'item_count' => $items->count(),
                 'total' => $total,
@@ -87,17 +107,42 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|string|exists:users,id',
-            'product_id' => 'required|string|exists:products,id',
+            'user_id' => 'required',
+            'product_id' => 'required',
             'quantity' => 'required|integer|min:1',
         ]);
+
+        // Check stock from tproduk table
+        $product = DB::table('tproduk')->where('id', $validated['product_id'])->first();
+        
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        // Check if product has enough stock
+        $existingCart = CartItem::where('user_id', $validated['user_id'])
+            ->where('product_id', $validated['product_id'])
+            ->first();
+        
+        $currentQuantityInCart = $existingCart ? $existingCart->jumlah : 0;
+        $newTotalQuantity = $currentQuantityInCart + $validated['quantity'];
+        
+        if ($product->stok !== null && $newTotalQuantity > $product->stok) {
+            return response()->json([
+                'success' => false,
+                'message' => "Stok tidak mencukupi. Stok tersedia: {$product->stok}, di keranjang: {$currentQuantityInCart}"
+            ], 400);
+        }
 
         $cartItem = CartItem::updateOrCreate(
             [
                 'user_id' => $validated['user_id'],
                 'product_id' => $validated['product_id']
             ],
-            ['jumlah' => $validated['quantity']]
+            ['jumlah' => $newTotalQuantity]
         );
 
         return response()->json([
@@ -122,6 +167,16 @@ class CartController extends Controller
                 'success' => false,
                 'message' => 'Cart item not found'
             ], 404);
+        }
+
+        // Check stock from tproduk table
+        $product = DB::table('tproduk')->where('id', $productId)->first();
+        
+        if ($product && $product->stok !== null && $validated['quantity'] > $product->stok) {
+            return response()->json([
+                'success' => false,
+                'message' => "Stok tidak mencukupi. Stok tersedia: {$product->stok}"
+            ], 400);
         }
 
         $cartItem->update(['jumlah' => $validated['quantity']]);
