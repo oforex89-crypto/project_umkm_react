@@ -1,0 +1,14 @@
+{
+    "22": "Batik Nusantara",
+    "23": "Kerajinan Kayu Jepara",
+    "25": "Snack Tradisional Bu Endang",
+    "26": "Tenun Ikat Sumba",
+    "27": "Rempah Nusantara",
+    "28": "Keramik Plered",
+    "29": "Organic Farm Lembang",
+    "30": "Silver Craft Kotagede",
+    "31": "Sambal Nusantara",
+    "34": "Coffee",
+    "38": "Starbuck",
+    "39": "Sambal Mbak Sri"
+}

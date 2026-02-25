@@ -293,16 +293,16 @@ export function WhatsAppOtpModal({
   return (
     // Render di dalam LoginModal tanpa overlay tambahan (LoginModal sudah punya)
     <div className="fixed inset-0 flex items-center justify-center z-[999] pointer-events-none">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 pointer-events-auto max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 pointer-events-auto max-h-[90vh] overflow-y-auto border dark:border-gray-700">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {type === "user" ? "Registrasi Pembeli" : "Registrasi UMKM"} via
             WhatsApp
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X size={24} />
           </button>
@@ -314,11 +314,11 @@ export function WhatsAppOtpModal({
             // Step 1: Input Nomor WhatsApp
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nomor WhatsApp
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 bg-gray-100 px-3 py-2 rounded-l-lg border border-r-0 border-gray-300">
+                  <span className="text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 dark:border-gray-600">
                     +62
                   </span>
                   <input
@@ -329,14 +329,14 @@ export function WhatsAppOtpModal({
                     }
                     placeholder="812345678901"
                     maxLength={13}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                     disabled={isLoading}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Contoh: 812345678901 (10-12 digit, tanpa 0 di depan)
                 </p>
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                   ⚠️ Hanya nomor Indonesia yang didukung
                 </p>
               </div>
@@ -344,7 +344,7 @@ export function WhatsAppOtpModal({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-black font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition"
+                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-2 transition"
               >
                 {isLoading ? (
                   <>
@@ -359,24 +359,24 @@ export function WhatsAppOtpModal({
                 )}
               </button>
 
-              <p className="text-xs text-gray-600 text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
                 Anda akan menerima kode OTP 6 digit di WhatsApp
               </p>
             </form>
           ) : (
             // Step 2: Input OTP
             <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-2">
                   <CheckCircle
                     size={20}
-                    className="text-green-600 flex-shrink-0 mt-0.5"
+                    className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5"
                   />
                   <div>
-                    <p className="font-semibold text-green-900">
+                    <p className="font-semibold text-green-900 dark:text-green-300">
                       Tombol WhatsApp Terbuka
                     </p>
-                    <p className="text-sm text-green-800">
+                    <p className="text-sm text-green-800 dark:text-green-400">
                       Jika belum terbuka, klik tombol di bawah
                     </p>
                   </div>
@@ -394,7 +394,7 @@ export function WhatsAppOtpModal({
 
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Kode OTP (6 digit)
                   </label>
                   <input
@@ -405,9 +405,9 @@ export function WhatsAppOtpModal({
                     }
                     placeholder="000000"
                     maxLength={6}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-center text-2xl tracking-widest focus:outline-none focus:border-green-500"
+                    className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-center text-2xl tracking-widest focus:outline-none focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Paste kode dari pesan WhatsApp yang Anda terima
                   </p>
                 </div>
@@ -436,7 +436,7 @@ export function WhatsAppOtpModal({
                     setStep("phone");
                     setOtp("");
                   }}
-                  className="w-full text-gray-600 hover:text-gray-800 font-semibold py-2"
+                  className="w-full text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold py-2"
                 >
                   Kembali
                 </button>

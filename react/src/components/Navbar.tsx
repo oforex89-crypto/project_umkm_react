@@ -393,7 +393,147 @@ export function Navbar({
                 </Link>
               ))}
 
-              {!user && (
+              {user ? (
+                <>
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 mt-2">
+                    <div className="font-medium text-gray-800 dark:text-white">
+                      {user.nama_lengkap || "User"}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {user.no_telepon}
+                    </div>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium rounded-full">
+                        <Award className="w-3 h-3" />
+                        {user.role || "customer"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Profil */}
+                  <button
+                    onClick={() => {
+                      onProfileClick();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <UserCircle className="w-5 h-5" />
+                    Profil Saya
+                  </button>
+
+                  {/* Riwayat Pesanan */}
+                  <button
+                    onClick={() => {
+                      navigate('/orders');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Package className="w-5 h-5" />
+                    Riwayat Pesanan
+                  </button>
+
+                  {/* Admin Panel */}
+                  {user.role === "admin" && (
+                    <button
+                      onClick={() => {
+                        onAdminClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <Settings className="w-5 h-5" />
+                      Admin Panel
+                    </button>
+                  )}
+
+                  {/* UMKM Dashboard & Kelola Pesanan */}
+                  {user.role === "umkm" && hasApprovedUmkm && (
+                    <>
+                      <button
+                        onClick={() => {
+                          onUMKMDashboardClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <Store className="w-5 h-5" />
+                        Dashboard UMKM
+                      </button>
+
+                      {onUMKMOrdersClick && (
+                        <button
+                          onClick={() => {
+                            onUMKMOrdersClick();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-2 px-4 py-3 rounded-lg text-indigo-600 dark:text-indigo-400 font-medium hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <ShoppingBag className="w-5 h-5" />
+                          📦 Kelola Pesanan
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Upgrade ke UMKM */}
+                  {user.role === "customer" && (
+                    <button
+                      onClick={() => {
+                        onRoleUpgradeClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <Award className="w-5 h-5" />
+                      Upgrade ke UMKM
+                    </button>
+                  )}
+
+                  {/* Daftarkan Bisnis & Cek Status */}
+                  {user.role === "umkm" && !hasApprovedUmkm && (
+                    <>
+                      <button
+                        onClick={() => {
+                          onSubmitClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <PlusCircle className="w-5 h-5" />
+                        Daftarkan Bisnis
+                      </button>
+
+                      {onStatusCheckClick && (
+                        <button
+                          onClick={() => {
+                            onStatusCheckClick();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <ClipboardCheck className="w-5 h-5" />
+                          Cek Status Pengajuan
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Keluar */}
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 transition-colors border-t border-gray-200 dark:border-gray-700 mt-2"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Keluar
+                  </button>
+                </>
+              ) : (
                 <button
                   onClick={() => {
                     onLoginClick();
