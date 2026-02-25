@@ -195,7 +195,7 @@ export default function RoleUpgradeModal({
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-center justify-between">
-            <h2 className="text-indigo-900">Ajukan Upgrade ke Role UMKM</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Ajukan Upgrade ke Role UMKM</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
@@ -246,9 +246,9 @@ export default function RoleUpgradeModal({
                 </div>
               )}
 
-            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-              <h3 className="text-indigo-900 mb-2">Manfaat Role UMKM</h3>
-              <ul className="text-sm text-indigo-700 space-y-1">
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+              <h3 className="font-semibold text-orange-800 dark:text-orange-300 mb-2">Manfaat Role UMKM</h3>
+              <ul className="text-sm text-orange-700 dark:text-orange-200 space-y-1">
                 <li>• Dapat menambah toko/stan UMKM sendiri</li>
                 <li>• Dapat menambah, edit, dan hapus produk Anda</li>
                 <li>• Tetap dapat berbelanja dari UMKM lain</li>
@@ -257,8 +257,8 @@ export default function RoleUpgradeModal({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="reason" className="block text-sm">
-                Alasan Permintaan <span className="text-red-500">*</span>
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                Alasan Permintaan <span className="text-red-500 dark:text-red-400 font-bold">*</span>
               </label>
               <textarea
                 id="reason"
@@ -267,9 +267,9 @@ export default function RoleUpgradeModal({
                 placeholder="Jelaskan mengapa Anda ingin menjadi penjual UMKM di marketplace ini..."
                 rows={5}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400"
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Jelaskan secara singkat tentang bisnis UMKM yang ingin Anda
                 jalankan
               </p>
@@ -279,14 +279,14 @@ export default function RoleUpgradeModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border-2 border-orange-500 dark:border-orange-400 text-orange-600 dark:text-orange-400 font-semibold rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
                 disabled={loading}
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-amber-600 shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 {loading ? "Mengajukan..." : "Ajukan Permintaan"}

@@ -2018,10 +2018,10 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                           </div>
                         )}
 
-                        <table className="w-full">
+                        <table className="w-full min-w-[1100px]">
                           <thead className="bg-slate-50 dark:bg-gray-700 border-b border-slate-200 dark:border-gray-600">
                             <tr>
-                              <th className="px-6 py-3 text-left">
+                              <th className="px-3 py-3 text-left w-10">
                                 <input
                                   type="checkbox"
                                   checked={selectedUmkmStores.size > 0 && selectedUmkmStores.size === umkmStores.filter(s => s.status === 'pending').length}
@@ -2029,28 +2029,28 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Tanggal
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Nama Toko
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Pemilik
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Email
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Kategori
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Produk
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider min-w-[200px]">
                                 Aksi
                               </th>
                             </tr>
@@ -2076,7 +2076,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                               })
                               .map((store) => (
                                 <tr key={store.id} className="hover:bg-slate-50 dark:hover:bg-gray-700">
-                                  <td className="px-6 py-4">
+                                  <td className="px-3 py-4 w-10">
                                     {store.status === 'pending' && (
                                       <input
                                         type="checkbox"
@@ -2086,27 +2086,27 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                       />
                                     )}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
+                                  <td className="px-3 py-4 text-sm text-slate-600 dark:text-gray-300 whitespace-nowrap">
                                     {store.created_at ? formatDate(store.created_at) : '-'}
                                   </td>
-                                  <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                                  <td className="px-3 py-4 text-sm font-medium text-slate-900 dark:text-white">
                                     {store.nama_toko}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-slate-700 dark:text-gray-300">
+                                  <td className="px-3 py-4 text-sm text-slate-700 dark:text-gray-300">
                                     {store.nama_pemilik}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
+                                  <td className="px-3 py-4 text-sm text-slate-600 dark:text-gray-300">
                                     {store.email || store.user?.email || "-"}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
+                                  <td className="px-3 py-4 text-sm text-slate-600 dark:text-gray-300">
                                     {store.category?.nama_kategori || "-"}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
+                                  <td className="px-3 py-4 text-sm text-slate-600 dark:text-gray-300 whitespace-nowrap">
                                     {store.products?.length || 0} produk
                                   </td>
-                                  <td className="px-6 py-4">
+                                  <td className="px-3 py-4">
                                     <span
-                                      className={`px-3 py-1 rounded-full text-xs ${store.status === "pending"
+                                      className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${store.status === "pending"
                                         ? "bg-yellow-100 text-yellow-800"
                                         : store.status === "active"
                                           ? "bg-green-100 text-green-800"
@@ -2120,8 +2120,8 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                           : "Ditolak"}
                                     </span>
                                   </td>
-                                  <td className="px-6 py-4">
-                                    <div className="flex gap-2">
+                                  <td className="px-3 py-4 min-w-[200px]">
+                                    <div className="flex flex-wrap gap-1.5">
                                       <button
                                         onClick={() => {
                                           console.log("=== STORE DETAIL DEBUG ===");
@@ -2132,7 +2132,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                           console.log("dokumen_perjanjian:", store.dokumen_perjanjian);
                                           setSelectedStoreDetail(store);
                                         }}
-                                        className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
                                       >
                                         Lihat Detail
                                       </button>
@@ -2144,28 +2144,28 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                           itemType: 'umkm',
                                           itemName: store.nama_toko
                                         })}
-                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                        className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                                         title="Edit Gambar Toko"
                                       >
-                                        <Image className="size-5" />
+                                        <Image className="size-4" />
                                       </button>
                                       <button
                                         onClick={() =>
                                           handleApproveUmkmStore(store.id)
                                         }
-                                        className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
+                                        className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                                         title="Setujui"
                                       >
-                                        <Check className="size-5" />
+                                        <Check className="size-4" />
                                       </button>
                                       <button
                                         onClick={() =>
                                           handleRejectUmkmStore(store.id)
                                         }
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                         title="Tolak"
                                       >
-                                        <XCircle className="size-5" />
+                                        <XCircle className="size-4" />
                                       </button>
                                     </div>
                                   </td>
