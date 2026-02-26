@@ -2018,7 +2018,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                           </div>
                         )}
 
-                        <table className="w-full min-w-[1100px]">
+                        <table className="w-full">
                           <thead className="bg-slate-50 dark:bg-gray-700 border-b border-slate-200 dark:border-gray-600">
                             <tr>
                               <th className="px-3 py-3 text-left w-10">
