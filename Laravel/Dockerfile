@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# Force rebuild - v2
+# Force rebuild - v3
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -37,6 +37,13 @@ RUN composer install --no-dev --optimize-autoloader
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# Create storage:link (symlink public/storage -> storage/app/public)
+RUN php artisan storage:link || true
+
+# Ensure uploads directory exists and has correct permissions
+RUN mkdir -p public/uploads/toko public/uploads/products public/uploads/produk public/uploads/site public/uploads/dokumen public/uploads/events public/uploads/gift-packages public/uploads/event_agreements public/uploads/variants \
+    && chmod -R 775 public/uploads
+
 # Expose port (Railway will use $PORT)
 EXPOSE 8080
 
@@ -45,3 +52,4 @@ RUN chmod +x start.sh
 
 # Start command
 CMD ["sh", "start.sh"]
+

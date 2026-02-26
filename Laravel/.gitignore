@@ -16,8 +16,8 @@
 /public/build
 /public/hot
 /public/storage
-/public/uploads/*
-!/public/uploads/.gitkeep
+# Note: uploads are tracked in git so they deploy to Railway
+# For production, consider using cloud storage (S3/Cloudinary)
 /storage/*.key
 /storage/pail
 /vendor

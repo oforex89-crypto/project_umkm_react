@@ -2050,7 +2050,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                               <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Status
                               </th>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider min-w-[200px]">
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                                 Aksi
                               </th>
                             </tr>
@@ -2120,54 +2120,15 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                           : "Ditolak"}
                                     </span>
                                   </td>
-                                  <td className="px-3 py-4 min-w-[200px]">
-                                    <div className="flex flex-wrap gap-1.5">
-                                      <button
-                                        onClick={() => {
-                                          console.log("=== STORE DETAIL DEBUG ===");
-                                          console.log("Store data:", store);
-                                          console.log("paroki:", store.paroki);
-                                          console.log("umat:", store.umat);
-                                          console.log("nama_bank:", store.nama_bank);
-                                          console.log("dokumen_perjanjian:", store.dokumen_perjanjian);
-                                          setSelectedStoreDetail(store);
-                                        }}
-                                        className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
-                                      >
-                                        Lihat Detail
-                                      </button>
-                                      <button
-                                        onClick={() => setImageEditModal({
-                                          isOpen: true,
-                                          itemId: Number(store.id),
-                                          currentImage: store.foto_toko || '',
-                                          itemType: 'umkm',
-                                          itemName: store.nama_toko
-                                        })}
-                                        className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                                        title="Edit Gambar Toko"
-                                      >
-                                        <Image className="size-4" />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleApproveUmkmStore(store.id)
-                                        }
-                                        className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
-                                        title="Setujui"
-                                      >
-                                        <Check className="size-4" />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleRejectUmkmStore(store.id)
-                                        }
-                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Tolak"
-                                      >
-                                        <XCircle className="size-4" />
-                                      </button>
-                                    </div>
+                                  <td className="px-3 py-4">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedStoreDetail(store);
+                                      }}
+                                      className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
+                                    >
+                                      Lihat Detail
+                                    </button>
                                   </td>
                                 </tr>
                               ))}
