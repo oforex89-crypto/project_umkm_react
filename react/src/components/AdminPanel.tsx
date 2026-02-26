@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Download,
   ShoppingCart,
+  Menu,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -157,6 +158,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
     | "siteSettings"
     | "purchaseLog"
   >("statistics");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<Error | null>(null);
@@ -1288,21 +1290,43 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
   try {
     return (
       <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex">
+        {/* Mobile Sidebar Overlay */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <div className="w-64 bg-slate-800 text-white flex flex-col">
-          <div className="p-6 border-b border-slate-700">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-500 p-2 rounded-lg">
-                <Store className="size-6" />
+        <div className={`
+          fixed md:relative inset-y-0 left-0 z-[70] md:z-auto
+          w-64 bg-slate-800 text-white flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0
+        `}>
+          <div className="p-4 md:p-6 border-b border-slate-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-500 p-2 rounded-lg">
+                  <Store className="size-5 md:size-6" />
+                </div>
+                <div>
+                  <h2 className="text-white text-sm md:text-base">Admin Panel</h2>
+                  <p className="text-xs text-slate-400">Pasar UMKM</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-white">Admin Panel</h2>
-                <p className="text-xs text-slate-400">Pasar UMKM</p>
-              </div>
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="md:hidden p-1 rounded-lg hover:bg-slate-700 transition-colors"
+              >
+                <X className="size-5 text-slate-400" />
+              </button>
             </div>
           </div>
 
-          <nav className="flex-1 p-4">
+          <nav className="flex-1 p-3 md:p-4 overflow-y-auto">
             {menuItems.map((item) => (
               <button
                 key={item.id}
@@ -1311,19 +1335,20 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                   setSelectedItems(new Set());
                   setSearchQuery("");
                   setFilterStatus("all");
+                  setMobileSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${activeTab === item.id
+                className={`w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg mb-1 transition-colors ${activeTab === item.id
                   ? "bg-amber-500 text-white"
                   : "text-slate-300 hover:bg-slate-700"
                   }`}
               >
-                <item.icon className="size-5" />
+                <item.icon className="size-4 md:size-5" />
                 <span className="text-sm">{item.label}</span>
               </button>
             ))}
           </nav>
 
-          <div className="p-4 border-t border-slate-700">
+          <div className="p-3 md:p-4 border-t border-slate-700">
             <button
               onClick={onClose}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
@@ -1335,20 +1360,30 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-gray-900">
+        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-gray-900 w-full md:w-auto">
           {/* Header */}
-          <div className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-8 py-4">
-            <h2 className="text-slate-800 dark:text-white mb-1">
-              {menuItems.find((m) => m.id === activeTab)?.label}
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-gray-400">
-              Kelola data{" "}
-              {menuItems.find((m) => m.id === activeTab)?.label.toLowerCase()}
-            </p>
+          <div className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 md:px-8 py-3 md:py-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                <Menu className="size-5 text-slate-700 dark:text-gray-200" />
+              </button>
+              <div>
+                <h2 className="text-slate-800 dark:text-white text-base md:text-lg mb-0.5 md:mb-1">
+                  {menuItems.find((m) => m.id === activeTab)?.label}
+                </h2>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400">
+                  Kelola data{" "}
+                  {menuItems.find((m) => m.id === activeTab)?.label.toLowerCase()}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-auto p-8">
+          <div className="flex-1 overflow-auto p-3 md:p-6 lg:p-8">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
@@ -1493,101 +1528,101 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                 )}
               </div>
             ) : activeTab === "statistics" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 {/* Store Statistics */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
                       <Store className="size-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Toko Aktif</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.activeStores}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.activeStores}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                       <Store className="size-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Menunggu Approval</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.pendingStores}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.pendingStores}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
                       <XCircle className="size-6 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Toko Ditolak</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.rejectedStores}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.rejectedStores}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                       <Store className="size-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Total Toko</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.totalStores}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.totalStores}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Product Statistics */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
                       <Package className="size-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Produk Aktif</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.activeProducts}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.activeProducts}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                       <Package className="size-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Produk Pending</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.pendingProducts}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.pendingProducts}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
                       <XCircle className="size-6 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Produk Ditolak</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.rejectedProducts}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.rejectedProducts}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-3 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-4">
                     <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
                       <Users className="size-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-gray-400">Total User</p>
-                      <p className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.totalUsers}</p>
+                      <p className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">{statistics.totalUsers}</p>
                     </div>
                   </div>
                 </div>
