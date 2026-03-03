@@ -124,7 +124,28 @@ class AuthController extends Controller
             if (strpos($credential, '@') !== false) {
                 $user = User::where('email', $credential)->first();
             } else {
-                $user = User::where('no_telepon', $credential)->first();
+                // Cari nomor telepon dengan berbagai format (08xxx, 628xxx, 8xxx)
+                $phone = preg_replace('/\D/', '', $credential); // Hapus non-digit
+                $phoneVariants = [$phone];
+                
+                if (str_starts_with($phone, '0')) {
+                    $phoneVariants[] = '62' . substr($phone, 1); // 08xxx -> 628xxx
+                    $phoneVariants[] = substr($phone, 1); // 08xxx -> 8xxx
+                } elseif (str_starts_with($phone, '62')) {
+                    $phoneVariants[] = '0' . substr($phone, 2); // 628xxx -> 08xxx
+                    $phoneVariants[] = substr($phone, 2); // 628xxx -> 8xxx
+                } else {
+                    $phoneVariants[] = '0' . $phone; // 8xxx -> 08xxx
+                    $phoneVariants[] = '62' . $phone; // 8xxx -> 628xxx
+                }
+                
+                $user = User::whereIn('no_telepon', $phoneVariants)->first();
+                
+                \Log::info("Phone login attempt", [
+                    'original' => $credential,
+                    'variants' => $phoneVariants,
+                    'found' => $user ? $user->email : 'NOT FOUND'
+                ]);
             }
 
             if ($user) {
@@ -136,13 +157,12 @@ class AuthController extends Controller
                     ], 401);
                 }
 
-                // Check status
-                if ($user->status !== 'active') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Akun Anda tidak aktif. Hubungi admin.'
-                    ], 403);
+                // Update last login dan reactivate user
+                $user->last_login_at = now();
+                if ($user->status === 'inactive') {
+                    $user->status = 'active'; // Auto-reactivate on login
                 }
+                $user->save();
 
                 return response()->json([
                     'success' => true,
@@ -801,6 +821,155 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Login/Register with Google
+     * Receives Google JWT credential, decodes it, finds or creates user
+     */
+    public function loginWithGoogle(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'credential' => 'required|string',
+            ]);
+
+            // Decode Google JWT token (base64url encoded payload)
+            $parts = explode('.', $validated['credential']);
+            if (count($parts) !== 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid Google token format'
+                ], 400);
+            }
+
+            // Decode the payload (second part of JWT)
+            $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+
+            if (!$payload || !isset($payload['email'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid Google token payload'
+                ], 400);
+            }
+
+            $email = $payload['email'];
+            $name = $payload['name'] ?? $email;
+            $googleId = $payload['sub'] ?? null;
+            $emailVerified = $payload['email_verified'] ?? false;
+
+            \Log::info("Google login attempt", [
+                'email' => $email,
+                'name' => $name,
+                'google_id' => $googleId,
+                'email_verified' => $emailVerified
+            ]);
+
+            // Verify token is from Google (check issuer)
+            $issuer = $payload['iss'] ?? '';
+            if (!in_array($issuer, ['accounts.google.com', 'https://accounts.google.com'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token bukan dari Google'
+                ], 400);
+            }
+
+            // Check if token is expired
+            $exp = $payload['exp'] ?? 0;
+            if ($exp < time()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token Google sudah expired. Coba login ulang.'
+                ], 400);
+            }
+
+            // Find existing user by email
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                // Existing user - login
+                if ($user->status !== 'active') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Akun Anda tidak aktif. Hubungi admin.'
+                    ], 403);
+                }
+
+                // Update google_id if not set
+                if ($googleId && !$user->google_id) {
+                    $user->google_id = $googleId;
+                    $user->save();
+                }
+
+                \Log::info("Google login: existing user found", ['user_id' => $user->id, 'email' => $email]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login Google berhasil',
+                    'data' => [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'nama_lengkap' => $user->nama_lengkap,
+                        'name' => $user->nama_lengkap,
+                        'no_telepon' => $user->no_telepon,
+                        'role' => $user->role,
+                        'status' => $user->status,
+                        'wa_verified' => $user->wa_verified,
+                    ]
+                ], 200);
+            }
+
+            // New user - auto-create account
+            \DB::beginTransaction();
+
+            try {
+                $user = User::create([
+                    'nama_lengkap' => $name,
+                    'email' => $email,
+                    'password' => Hash::make(bin2hex(random_bytes(16))), // Random password (user logs in via Google)
+                    'role' => 'customer',
+                    'status' => 'active',
+                    'wa_verified' => false,
+                    'google_id' => $googleId,
+                ]);
+
+                \DB::commit();
+
+                \Log::info("Google login: new user created", ['user_id' => $user->id, 'email' => $email]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Akun berhasil dibuat via Google',
+                    'data' => [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'nama_lengkap' => $user->nama_lengkap,
+                        'name' => $user->nama_lengkap,
+                        'no_telepon' => null,
+                        'role' => $user->role,
+                        'status' => $user->status,
+                        'wa_verified' => false,
+                    ]
+                ], 201);
+
+            } catch (\Exception $dbError) {
+                \DB::rollBack();
+                throw $dbError;
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error("Google login error", ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Login Google gagal: ' . $e->getMessage()
             ], 500);
         }
     }

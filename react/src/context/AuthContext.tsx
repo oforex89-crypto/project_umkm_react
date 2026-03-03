@@ -30,6 +30,7 @@ interface AuthContextType {
     name: string,
     role?: "admin" | "customer" | "umkm"
   ) => Promise<void>;
+  signInWithGoogle: (credential: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -240,6 +241,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new CustomEvent("user-changed", { detail: { userId: null } }));
   };
 
+  const signInWithGoogle = async (credential: string) => {
+    try {
+      console.log("Attempting Google login...");
+
+      const response = await apiClient.post("/auth/google", {
+        credential: credential,
+      });
+
+      const data = response.data;
+
+      if (!data.success) {
+        throw new Error(data.message || "Login Google gagal");
+      }
+
+      // Extract user info from response
+      const newUser: User = {
+        id: data.data.id || `user_${Date.now()}`,
+        email: data.data.email,
+        name: data.data.nama_lengkap || data.data.name || data.data.email,
+        role: data.data.role || "customer",
+        nama_lengkap: data.data.nama_lengkap,
+        no_telepon: data.data.no_telepon,
+        status: data.data.status,
+        wa_verified: data.data.wa_verified,
+      };
+
+      const token =
+        data.data.token ||
+        `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      console.log("Google login successful, user:", newUser);
+
+      setUser(newUser);
+      setAccessToken(token);
+
+      localStorage.setItem("pasar_umkm_current_user", JSON.stringify(newUser));
+      localStorage.setItem("pasar_umkm_access_token", token);
+
+      // Dispatch custom event to notify CartContext to load user's cart
+      window.dispatchEvent(new CustomEvent("user-changed", { detail: { userId: newUser.id } }));
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Terjadi kesalahan saat login dengan Google";
+      throw new Error(errorMessage);
+    }
+  };
+
   const refreshUser = async () => {
     try {
       // Get current user from localStorage
@@ -296,6 +347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut,
         refreshUser,
       }}

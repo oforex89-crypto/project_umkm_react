@@ -97,6 +97,8 @@ interface User {
   email: string;
   name: string;
   role: string;
+  status?: string;
+  no_telepon?: string;
   createdAt?: string;
 }
 
@@ -2203,8 +2205,11 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                             )
                             .map((userItem) => (
                               <tr key={userItem.id} className="hover:bg-slate-50 dark:hover:bg-gray-700">
-                                <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">
-                                  {userItem.name}
+                                <td className="px-6 py-4">
+                                  <div className="text-sm font-medium text-slate-900 dark:text-white">{userItem.name}</div>
+                                  {userItem.no_telepon && (
+                                    <div className="text-xs text-slate-400 dark:text-gray-500">{userItem.no_telepon}</div>
+                                  )}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
                                   {userItem.email}
@@ -2218,17 +2223,34 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                         e.target.value
                                       )
                                     }
-                                    className="px-3 py-1 border border-slate-300 rounded text-xs focus:ring-2 focus:ring-indigo-500 capitalize"
+                                    className="px-3 py-1 border border-slate-300 dark:border-gray-600 rounded text-xs focus:ring-2 focus:ring-indigo-500 capitalize bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                   >
                                     <option value="customer">Customer</option>
                                     <option value="umkm">UMKM</option>
                                     <option value="admin">Admin</option>
                                   </select>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300">
-                                  {userItem.createdAt
-                                    ? formatDate(userItem.createdAt)
-                                    : "-"}
+                                <td className="px-6 py-4">
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm(`Hapus user "${userItem.name}"?`)) return;
+                                      try {
+                                        const response = await fetch(
+                                          `${API_BASE_URL}/admin/users/${userItem.id}`,
+                                          { method: "DELETE" }
+                                        );
+                                        if (!response.ok) throw new Error('Gagal hapus');
+                                        toast.success('User berhasil dihapus');
+                                        fetchData();
+                                      } catch (error) {
+                                        toast.error('Gagal menghapus user');
+                                      }
+                                    }}
+                                    className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"
+                                    title="Hapus"
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -2388,975 +2410,991 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
         </div>
 
         {/* Modal Detail Toko UMKM */}
-        {selectedStoreDetail && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Detail Pengajuan Toko UMKM
-                </h2>
-                <button
-                  onClick={() => setSelectedStoreDetail(null)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
+        {
+          selectedStoreDetail && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    Detail Pengajuan Toko UMKM
+                  </h2>
+                  <button
+                    onClick={() => setSelectedStoreDetail(null)}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
 
-              <div className="p-6 space-y-6">
-                {/* Info Toko */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-3">
-                    {/* Logo Toko - Bulat Kecil */}
-                    {selectedStoreDetail.foto_toko ? (
-                      <img
-                        src={
-                          selectedStoreDetail.foto_toko.startsWith("data:image")
-                            ? selectedStoreDetail.foto_toko
-                            : `${BASE_HOST}/${selectedStoreDetail.foto_toko}`
-                        }
-                        alt={selectedStoreDetail.nama_toko}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-gray-500 flex-shrink-0"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    {!selectedStoreDetail.foto_toko && (
-                      <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-gray-600 flex items-center justify-center border-2 border-slate-300 dark:border-gray-500 flex-shrink-0">
-                        <Store className="size-6 text-slate-400 dark:text-gray-400" />
+                <div className="p-6 space-y-6">
+                  {/* Info Toko */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-3">
+                      {/* Logo Toko - Bulat Kecil */}
+                      {selectedStoreDetail.foto_toko ? (
+                        <img
+                          src={
+                            selectedStoreDetail.foto_toko.startsWith("data:image")
+                              ? selectedStoreDetail.foto_toko
+                              : `${BASE_HOST}/${selectedStoreDetail.foto_toko}`
+                          }
+                          alt={selectedStoreDetail.nama_toko}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-gray-500 flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      {!selectedStoreDetail.foto_toko && (
+                        <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-gray-600 flex items-center justify-center border-2 border-slate-300 dark:border-gray-500 flex-shrink-0">
+                          <Store className="size-6 text-slate-400 dark:text-gray-400" />
+                        </div>
+                      )}
+                      Informasi Toko
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Nama Toko</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {selectedStoreDetail.nama_toko}
+                        </p>
                       </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Pemilik</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {selectedStoreDetail.nama_pemilik}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Kategori</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {selectedStoreDetail.category?.nama_kategori || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Status</p>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedStoreDetail.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : selectedStoreDetail.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                            }`}
+                        >
+                          {selectedStoreDetail.status === "pending"
+                            ? "Menunggu"
+                            : selectedStoreDetail.status === "active"
+                              ? "Aktif"
+                              : "Ditolak"}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Deskripsi Toko</p>
+                        <p className="text-slate-900 dark:text-white mt-1">
+                          {selectedStoreDetail.deskripsi}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kontak */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      Informasi Kontak
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Email</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.email || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">WhatsApp</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.whatsapp || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Telepon</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.telepon || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Instagram</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.instagram || "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dokumen Perjanjian */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      📄 Dokumen Perjanjian
+                    </h3>
+                    {selectedStoreDetail.dokumen_perjanjian ? (
+                      <div className="flex items-center gap-3">
+                        <a
+                          href={`${BASE_HOST}/${selectedStoreDetail.dokumen_perjanjian}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Lihat/Download Dokumen
+                        </a>
+                        <span className="text-sm text-slate-500 dark:text-gray-400">
+                          {selectedStoreDetail.dokumen_perjanjian.split('/').pop()}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 dark:text-gray-400 italic">- Belum ada dokumen perjanjian yang diupload -</p>
                     )}
-                    Informasi Toko
-                  </h3>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Nama Toko</p>
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {selectedStoreDetail.nama_toko}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Pemilik</p>
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {selectedStoreDetail.nama_pemilik}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Kategori</p>
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {selectedStoreDetail.category?.nama_kategori || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Status</p>
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedStoreDetail.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : selectedStoreDetail.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                          }`}
-                      >
-                        {selectedStoreDetail.status === "pending"
-                          ? "Menunggu"
-                          : selectedStoreDetail.status === "active"
-                            ? "Aktif"
-                            : "Ditolak"}
-                      </span>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Deskripsi Toko</p>
-                      <p className="text-slate-900 dark:text-white mt-1">
-                        {selectedStoreDetail.deskripsi}
-                      </p>
+                  {/* Informasi Paroki & Umat */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      ⛪ Informasi Paroki
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Paroki</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.paroki || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Umat</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.umat || "-"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Kontak */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Informasi Kontak
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Email</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.email || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">WhatsApp</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.whatsapp || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Telepon</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.telepon || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Instagram</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.instagram || "-"}
-                      </p>
+                  {/* Informasi Bank */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      🏦 Informasi Rekening Bank
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Nama Bank</p>
+                        <p className="text-slate-900 dark:text-white font-medium">
+                          {selectedStoreDetail.nama_bank || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">No. Rekening</p>
+                        <p className="text-slate-900 dark:text-white font-mono">
+                          {selectedStoreDetail.no_rekening || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Atas Nama</p>
+                        <p className="text-slate-900 dark:text-white">
+                          {selectedStoreDetail.atas_nama_rekening || "-"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Dokumen Perjanjian */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    📄 Dokumen Perjanjian
-                  </h3>
-                  {selectedStoreDetail.dokumen_perjanjian ? (
-                    <div className="flex items-center gap-3">
-                      <a
-                        href={`${BASE_HOST}/${selectedStoreDetail.dokumen_perjanjian}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Lihat/Download Dokumen
-                      </a>
-                      <span className="text-sm text-slate-500 dark:text-gray-400">
-                        {selectedStoreDetail.dokumen_perjanjian.split('/').pop()}
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="text-slate-500 dark:text-gray-400 italic">- Belum ada dokumen perjanjian yang diupload -</p>
-                  )}
-                </div>
-
-                {/* Informasi Paroki & Umat */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    ⛪ Informasi Paroki
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Paroki</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.paroki || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Umat</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.umat || "-"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Informasi Bank */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    🏦 Informasi Rekening Bank
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Nama Bank</p>
-                      <p className="text-slate-900 dark:text-white font-medium">
-                        {selectedStoreDetail.nama_bank || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">No. Rekening</p>
-                      <p className="text-slate-900 dark:text-white font-mono">
-                        {selectedStoreDetail.no_rekening || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Atas Nama</p>
-                      <p className="text-slate-900 dark:text-white">
-                        {selectedStoreDetail.atas_nama_rekening || "-"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* About & Jasa Kirim */}
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    ℹ️ Informasi Tambahan
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">About / Tentang Toko</p>
-                      <p className="text-slate-900 dark:text-white mt-1">
-                        {selectedStoreDetail.about_me || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-gray-400">Menyediakan Jasa Kirim?</p>
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium mt-1 ${selectedStoreDetail.menyediakan_jasa_kirim
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
-                        }`}>
-                        {selectedStoreDetail.menyediakan_jasa_kirim ? '✅ Ya, Tersedia' : '❌ Tidak Tersedia'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Package className="size-5" />
-                    Produk yang Diajukan (
-                    {selectedStoreDetail.products?.length || 0})
-                  </h3>
-                  {selectedStoreDetail.products &&
-                    selectedStoreDetail.products.length > 0 ? (
+                  {/* About & Jasa Kirim */}
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      ℹ️ Informasi Tambahan
+                    </h3>
                     <div className="space-y-4">
-                      {selectedStoreDetail.products.map((product) => {
-                        const productId = product.id;
-                        const approval = productApprovals.get(productId);
-                        const isRejected = approval?.action === 'reject';
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">About / Tentang Toko</p>
+                        <p className="text-slate-900 dark:text-white mt-1">
+                          {selectedStoreDetail.about_me || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Menyediakan Jasa Kirim?</p>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium mt-1 ${selectedStoreDetail.menyediakan_jasa_kirim
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-300'
+                          }`}>
+                          {selectedStoreDetail.menyediakan_jasa_kirim ? '✅ Ya, Tersedia' : '❌ Tidak Tersedia'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                        return (
-                          <div
-                            key={product.id}
-                            className={`bg-white dark:bg-gray-700 rounded-lg p-4 border-2 transition-all ${isRejected
-                              ? 'border-red-300 bg-red-50 dark:bg-red-900/30'
-                              : approval?.action === 'approve'
-                                ? 'border-green-300 bg-green-50 dark:bg-green-900/30'
-                                : 'border-slate-200 dark:border-gray-600'
-                              }`}
-                          >
-                            <div className="flex gap-4">
-                              {/* Product Image */}
-                              <div className="flex-shrink-0">
-                                {product.gambar ? (
-                                  <img
-                                    src={getImageUrl(product.gambar, BASE_HOST, getPlaceholderDataUrl("No Image", 128, 128))}
-                                    alt={product.nama_produk}
-                                    className="w-32 h-32 object-cover rounded-lg"
-                                    onError={(e) => handleImageError(e, "No Image")}
-                                  />
-                                ) : (
-                                  <div className="w-32 h-32 bg-slate-200 rounded-lg flex items-center justify-center">
-                                    <Package className="size-12 text-slate-400" />
-                                  </div>
-                                )}
-                              </div>
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Package className="size-5" />
+                      Produk yang Diajukan (
+                      {selectedStoreDetail.products?.length || 0})
+                    </h3>
+                    {selectedStoreDetail.products &&
+                      selectedStoreDetail.products.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedStoreDetail.products.map((product) => {
+                          const productId = product.id;
+                          const approval = productApprovals.get(productId);
+                          const isRejected = approval?.action === 'reject';
 
-                              {/* Product Info */}
-                              <div className="flex-1 space-y-2">
-                                <div>
-                                  <h4 className="font-semibold text-slate-900 dark:text-white text-lg">
-                                    {product.nama_produk}
-                                  </h4>
-                                  <p className="text-sm text-slate-600 dark:text-gray-300 mt-1">
-                                    {product.deskripsi}
-                                  </p>
-                                </div>
-
-                                <div className="flex items-center gap-4">
-                                  <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                    Rp {Number(product.harga).toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-                                  </span>
-                                  {product.kategori && (
-                                    <span className="px-2 py-1 bg-slate-100 dark:bg-gray-600 text-slate-600 dark:text-gray-200 text-xs rounded">
-                                      {product.kategori}
-                                    </span>
+                          return (
+                            <div
+                              key={product.id}
+                              className={`bg-white dark:bg-gray-700 rounded-lg p-4 border-2 transition-all ${isRejected
+                                ? 'border-red-300 bg-red-50 dark:bg-red-900/30'
+                                : approval?.action === 'approve'
+                                  ? 'border-green-300 bg-green-50 dark:bg-green-900/30'
+                                  : 'border-slate-200 dark:border-gray-600'
+                                }`}
+                            >
+                              <div className="flex gap-4">
+                                {/* Product Image */}
+                                <div className="flex-shrink-0">
+                                  {product.gambar ? (
+                                    <img
+                                      src={getImageUrl(product.gambar, BASE_HOST, getPlaceholderDataUrl("No Image", 128, 128))}
+                                      alt={product.nama_produk}
+                                      className="w-32 h-32 object-cover rounded-lg"
+                                      onError={(e) => handleImageError(e, "No Image")}
+                                    />
+                                  ) : (
+                                    <div className="w-32 h-32 bg-slate-200 rounded-lg flex items-center justify-center">
+                                      <Package className="size-12 text-slate-400" />
+                                    </div>
                                   )}
                                 </div>
 
-                                {/* Approval Actions - Only show for pending stores */}
-                                {selectedStoreDetail.status === "pending" && (
-                                  <div className="mt-3 space-y-2">
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => handleProductAction(productId, 'approve')}
-                                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${approval?.action === 'approve' || !approval
-                                          ? 'bg-green-600 text-white hover:bg-green-700'
-                                          : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-gray-500'
-                                          }`}
-                                      >
-                                        <Check className="size-4 inline mr-1" />
-                                        Terima Produk
-                                      </button>
-                                      <button
-                                        onClick={() => handleProductAction(productId, 'reject')}
-                                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${isRejected
-                                          ? 'bg-red-600 text-white hover:bg-red-700'
-                                          : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-gray-500'
-                                          }`}
-                                      >
-                                        <XCircle className="size-4 inline mr-1" />
-                                        Tolak Produk
-                                      </button>
-                                    </div>
+                                {/* Product Info */}
+                                <div className="flex-1 space-y-2">
+                                  <div>
+                                    <h4 className="font-semibold text-slate-900 dark:text-white text-lg">
+                                      {product.nama_produk}
+                                    </h4>
+                                    <p className="text-sm text-slate-600 dark:text-gray-300 mt-1">
+                                      {product.deskripsi}
+                                    </p>
+                                  </div>
 
-                                    {/* Comment field - show when rejected */}
-                                    {isRejected && (
-                                      <div className="space-y-3">
-                                        <div>
-                                          <label className="block text-sm font-medium text-slate-700 dark:text-gray-200 mb-1">
-                                            Alasan Penolakan:
-                                          </label>
-                                          <textarea
-                                            value={approval?.comment || ''}
-                                            onChange={(e) => handleProductComment(productId, e.target.value)}
-                                            placeholder="Jelaskan alasan penolakan produk ini..."
-                                            className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 text-sm bg-white dark:bg-gray-700 dark:text-white"
-                                            rows={2}
-                                          />
-                                        </div>
-
-                                        {/* Tombol Kirim Penolakan Individual */}
-                                        <button
-                                          onClick={async () => {
-                                            if (!approval?.comment?.trim()) {
-                                              toast.error('Harap isi alasan penolakan terlebih dahulu');
-                                              return;
-                                            }
-
-                                            if (confirm(`Yakin ingin menolak produk "${product.nama_produk}"?`)) {
-                                              try {
-                                                const response = await fetch(
-                                                  `${API_BASE_URL}/products/${productId}/reject`,
-                                                  {
-                                                    method: 'POST',
-                                                    headers: {
-                                                      'Content-Type': 'application/json',
-                                                    },
-                                                    body: JSON.stringify({
-                                                      comment: approval.comment,
-                                                    }),
-                                                  }
-                                                );
-
-                                                const data = await response.json();
-
-                                                if (!response.ok) {
-                                                  // Check for validation error about comment length
-                                                  if (response.status === 422 && data.errors?.comment) {
-                                                    throw new Error('Alasan penolakan harus minimal 10 karakter');
-                                                  }
-                                                  throw new Error(data.message || 'Gagal menolak produk');
-                                                }
-
-                                                toast.success(`Produk "${product.nama_produk}" berhasil ditolak`);
-
-                                                // Clear approval map
-                                                setProductApprovals(new Map());
-
-                                                // Close detail modal
-                                                setSelectedStoreDetail(null);
-
-                                                // Refresh data to update the list
-                                                await fetchData();
-                                              } catch (error) {
-                                                console.error('Error rejecting product:', error);
-                                                toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
-                                              }
-                                            }
-                                          }}
-                                          className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                                        >
-                                          <XCircle className="size-4" />
-                                          Kirim Penolakan Produk Ini
-                                        </button>
-                                      </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                      Rp {Number(product.harga).toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+                                    </span>
+                                    {product.kategori && (
+                                      <span className="px-2 py-1 bg-slate-100 dark:bg-gray-600 text-slate-600 dark:text-gray-200 text-xs rounded">
+                                        {product.kategori}
+                                      </span>
                                     )}
                                   </div>
-                                )}
+
+                                  {/* Approval Actions - Only show for pending stores */}
+                                  {selectedStoreDetail.status === "pending" && (
+                                    <div className="mt-3 space-y-2">
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleProductAction(productId, 'approve')}
+                                          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${approval?.action === 'approve' || !approval
+                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                            : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-gray-500'
+                                            }`}
+                                        >
+                                          <Check className="size-4 inline mr-1" />
+                                          Terima Produk
+                                        </button>
+                                        <button
+                                          onClick={() => handleProductAction(productId, 'reject')}
+                                          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${isRejected
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-gray-500'
+                                            }`}
+                                        >
+                                          <XCircle className="size-4 inline mr-1" />
+                                          Tolak Produk
+                                        </button>
+                                      </div>
+
+                                      {/* Comment field - show when rejected */}
+                                      {isRejected && (
+                                        <div className="space-y-3">
+                                          <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-200 mb-1">
+                                              Alasan Penolakan:
+                                            </label>
+                                            <textarea
+                                              value={approval?.comment || ''}
+                                              onChange={(e) => handleProductComment(productId, e.target.value)}
+                                              placeholder="Jelaskan alasan penolakan produk ini..."
+                                              className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 text-sm bg-white dark:bg-gray-700 dark:text-white"
+                                              rows={2}
+                                            />
+                                          </div>
+
+                                          {/* Tombol Kirim Penolakan Individual */}
+                                          <button
+                                            onClick={async () => {
+                                              if (!approval?.comment?.trim()) {
+                                                toast.error('Harap isi alasan penolakan terlebih dahulu');
+                                                return;
+                                              }
+
+                                              if (confirm(`Yakin ingin menolak produk "${product.nama_produk}"?`)) {
+                                                try {
+                                                  const response = await fetch(
+                                                    `${API_BASE_URL}/products/${productId}/reject`,
+                                                    {
+                                                      method: 'POST',
+                                                      headers: {
+                                                        'Content-Type': 'application/json',
+                                                      },
+                                                      body: JSON.stringify({
+                                                        comment: approval.comment,
+                                                      }),
+                                                    }
+                                                  );
+
+                                                  const data = await response.json();
+
+                                                  if (!response.ok) {
+                                                    // Check for validation error about comment length
+                                                    if (response.status === 422 && data.errors?.comment) {
+                                                      throw new Error('Alasan penolakan harus minimal 10 karakter');
+                                                    }
+                                                    throw new Error(data.message || 'Gagal menolak produk');
+                                                  }
+
+                                                  toast.success(`Produk "${product.nama_produk}" berhasil ditolak`);
+
+                                                  // Clear approval map
+                                                  setProductApprovals(new Map());
+
+                                                  // Close detail modal
+                                                  setSelectedStoreDetail(null);
+
+                                                  // Refresh data to update the list
+                                                  await fetchData();
+                                                } catch (error) {
+                                                  console.error('Error rejecting product:', error);
+                                                  toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
+                                                }
+                                              }
+                                            }}
+                                            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                          >
+                                            <XCircle className="size-4" />
+                                            Kirim Penolakan Produk Ini
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-slate-500 dark:text-gray-400 text-center py-4">
-                      Tidak ada produk yang diajukan
-                    </p>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                {selectedStoreDetail.status === "pending" && (
-                  <div className="pt-4 border-t border-slate-200 dark:border-gray-600 space-y-4">
-                    {/* UMKM Store Action */}
-                    <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-slate-200 dark:border-gray-600">
-                      <h4 className="font-semibold text-slate-900 dark:text-white mb-3">Keputusan Toko UMKM</h4>
-                      <div className="flex gap-2 mb-3">
-                        <button
-                          onClick={() => setUmkmAction('approve')}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${umkmAction === 'approve'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200'
-                            }`}
-                        >
-                          <Check className="size-4 inline mr-1" />
-                          Terima Toko
-                        </button>
-                        <button
-                          onClick={() => setUmkmAction('reject')}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${umkmAction === 'reject'
-                            ? 'bg-red-600 text-white'
-                            : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200'
-                            }`}
-                        >
-                          <XCircle className="size-4 inline mr-1" />
-                          Tolak Toko
-                        </button>
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <p className="text-slate-500 dark:text-gray-400 text-center py-4">
+                        Tidak ada produk yang diajukan
+                      </p>
+                    )}
+                  </div>
 
-                      {umkmAction === 'reject' && (
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-200 mb-1">
-                              Alasan Penolakan Toko: <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
-                            </label>
-                            <textarea
-                              value={umkmComment}
-                              onChange={(e) => setUmkmComment(e.target.value)}
-                              placeholder="Jelaskan alasan penolakan toko ini..."
-                              className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 text-sm bg-white dark:bg-gray-700 dark:text-white"
-                              rows={3}
-                            />
-                          </div>
-
-                          {/* Tombol Kirim Penolakan Toko */}
+                  {/* Action Buttons */}
+                  {selectedStoreDetail.status === "pending" && (
+                    <div className="pt-4 border-t border-slate-200 dark:border-gray-600 space-y-4">
+                      {/* UMKM Store Action */}
+                      <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-slate-200 dark:border-gray-600">
+                        <h4 className="font-semibold text-slate-900 dark:text-white mb-3">Keputusan Toko UMKM</h4>
+                        <div className="flex gap-2 mb-3">
                           <button
-                            onClick={async () => {
-                              if (!umkmComment?.trim()) {
-                                toast.error('Harap isi alasan penolakan terlebih dahulu');
-                                return;
-                              }
-                              if (umkmComment.trim().length < 10) {
-                                toast.error('Alasan penolakan harus minimal 10 karakter');
-                                return;
-                              }
-
-                              if (confirm(`Yakin ingin menolak toko "${selectedStoreDetail.nama_toko}"?`)) {
-                                try {
-                                  const response = await fetch(
-                                    `${API_BASE_URL}/umkm/${selectedStoreDetail.id}/reject`,
-                                    {
-                                      method: 'POST',
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                      },
-                                      body: JSON.stringify({
-                                        comment: umkmComment,
-                                      }),
-                                    }
-                                  );
-
-                                  const data = await response.json();
-
-                                  if (!response.ok) {
-                                    throw new Error(data.message || 'Gagal menolak toko');
-                                  }
-
-                                  toast.success(`Toko "${selectedStoreDetail.nama_toko}" berhasil ditolak`);
-
-                                  // Reset state
-                                  setSelectedStoreDetail(null);
-                                  setProductApprovals(new Map());
-                                  setUmkmComment("");
-                                  setUmkmAction('approve');
-
-                                  // Refresh data
-                                  await fetchData();
-                                } catch (error) {
-                                  console.error('Error rejecting store:', error);
-                                  toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
-                                }
-                              }
-                            }}
-                            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                            onClick={() => setUmkmAction('approve')}
+                            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${umkmAction === 'approve'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200'
+                              }`}
                           >
-                            <XCircle className="size-4" />
-                            Kirim Penolakan Toko Ini
+                            <Check className="size-4 inline mr-1" />
+                            Terima Toko
+                          </button>
+                          <button
+                            onClick={() => setUmkmAction('reject')}
+                            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${umkmAction === 'reject'
+                              ? 'bg-red-600 text-white'
+                              : 'bg-slate-200 dark:bg-gray-600 text-slate-600 dark:text-gray-200'
+                              }`}
+                          >
+                            <XCircle className="size-4 inline mr-1" />
+                            Tolak Toko
                           </button>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Submit Button */}
-                    <div className="flex gap-3 justify-end">
-                      <button
-                        onClick={() => {
-                          setSelectedStoreDetail(null);
-                          setProductApprovals(new Map());
-                          setUmkmComment("");
-                          setUmkmAction('approve');
-                        }}
-                        className="px-6 py-2.5 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
-                      >
-                        Batal
-                      </button>
-                      <button
-                        onClick={handleSubmitApprovalWithProducts}
-                        disabled={
-                          umkmAction === 'reject' ||
-                          Array.from(productApprovals.values()).some((a: any) => a.action === 'reject')
-                        }
-                        className={`px-6 py-2.5 text-white rounded-lg font-medium transition-colors flex items-center gap-2 ${umkmAction === 'reject' || Array.from(productApprovals.values()).some((a: any) => a.action === 'reject')
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-amber-500 hover:bg-amber-600'
-                          }`}
-                      >
-                        <Check className="size-5" />
-                        Proses Pengajuan
-                      </button>
+                        {umkmAction === 'reject' && (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-gray-200 mb-1">
+                                Alasan Penolakan Toko: <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
+                              </label>
+                              <textarea
+                                value={umkmComment}
+                                onChange={(e) => setUmkmComment(e.target.value)}
+                                placeholder="Jelaskan alasan penolakan toko ini..."
+                                className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg focus:ring-2 focus:ring-red-500 text-sm bg-white dark:bg-gray-700 dark:text-white"
+                                rows={3}
+                              />
+                            </div>
+
+                            {/* Tombol Kirim Penolakan Toko */}
+                            <button
+                              onClick={async () => {
+                                if (!umkmComment?.trim()) {
+                                  toast.error('Harap isi alasan penolakan terlebih dahulu');
+                                  return;
+                                }
+                                if (umkmComment.trim().length < 10) {
+                                  toast.error('Alasan penolakan harus minimal 10 karakter');
+                                  return;
+                                }
+
+                                if (confirm(`Yakin ingin menolak toko "${selectedStoreDetail.nama_toko}"?`)) {
+                                  try {
+                                    const response = await fetch(
+                                      `${API_BASE_URL}/umkm/${selectedStoreDetail.id}/reject`,
+                                      {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                          comment: umkmComment,
+                                        }),
+                                      }
+                                    );
+
+                                    const data = await response.json();
+
+                                    if (!response.ok) {
+                                      throw new Error(data.message || 'Gagal menolak toko');
+                                    }
+
+                                    toast.success(`Toko "${selectedStoreDetail.nama_toko}" berhasil ditolak`);
+
+                                    // Reset state
+                                    setSelectedStoreDetail(null);
+                                    setProductApprovals(new Map());
+                                    setUmkmComment("");
+                                    setUmkmAction('approve');
+
+                                    // Refresh data
+                                    await fetchData();
+                                  } catch (error) {
+                                    console.error('Error rejecting store:', error);
+                                    toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
+                                  }
+                                }
+                              }}
+                              className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                            >
+                              <XCircle className="size-4" />
+                              Kirim Penolakan Toko Ini
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => {
+                            setSelectedStoreDetail(null);
+                            setProductApprovals(new Map());
+                            setUmkmComment("");
+                            setUmkmAction('approve');
+                          }}
+                          className="px-6 py-2.5 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={handleSubmitApprovalWithProducts}
+                          disabled={
+                            umkmAction === 'reject' ||
+                            Array.from(productApprovals.values()).some((a: any) => a.action === 'reject')
+                          }
+                          className={`px-6 py-2.5 text-white rounded-lg font-medium transition-colors flex items-center gap-2 ${umkmAction === 'reject' || Array.from(productApprovals.values()).some((a: any) => a.action === 'reject')
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-amber-500 hover:bg-amber-600'
+                            }`}
+                        >
+                          <Check className="size-5" />
+                          Proses Pengajuan
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         {/* Modal Reject Product dengan Reason */}
-        {rejectingProduct && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6">
-              <h3 className="text-xl font-bold mb-4 dark:text-white">Tolak Produk</h3>
+        {
+          rejectingProduct && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6">
+                <h3 className="text-xl font-bold mb-4 dark:text-white">Tolak Produk</h3>
 
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  Produk: <strong>{rejectingProduct.nama_produk}</strong>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Toko: <strong>{rejectingProduct.nama_toko}</strong>
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2 dark:text-gray-200">
-                  Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
-                </label>
-                <textarea
-                  value={productRejectionReason}
-                  onChange={(e) => setProductRejectionReason(e.target.value)}
-                  placeholder="Berikan alasan penolakan produk ini..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
-                  rows={4}
-                />
-                <div className="mt-1 text-right">
-                  <span className={`text-xs ${productRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
-                    {productRejectionReason.trim().length}/10 karakter
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setRejectingProduct(null);
-                    setProductRejectionReason("");
-                  }}
-                  className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSubmitProductRejection}
-                  disabled={!productRejectionReason.trim()}
-                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <XCircle className="size-5" />
-                  Tolak Produk
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* UMKM Bulk Reject Modal */}
-        {showBulkUmkmRejectModal && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Tolak {selectedUmkmStores.size} Toko UMKM
-              </h3>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2 dark:text-gray-200">
-                  Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
-                </label>
-                <textarea
-                  value={bulkUmkmRejectionReason}
-                  onChange={(e) => setBulkUmkmRejectionReason(e.target.value)}
-                  placeholder="Berikan alasan penolakan untuk toko-toko ini..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
-                  rows={4}
-                />
-                <div className="mt-1 text-right">
-                  <span className={`text-xs ${bulkUmkmRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
-                    {bulkUmkmRejectionReason.trim().length}/10 karakter
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowBulkUmkmRejectModal(false);
-                    setBulkUmkmRejectionReason("");
-                  }}
-                  className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSubmitBulkUmkmRejection}
-                  disabled={bulkUmkmRejectionReason.trim().length < 10}
-                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <XCircle className="size-5" />
-                  Tolak {selectedUmkmStores.size} Toko
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Product Bulk Reject Modal */}
-        {showBulkRejectModal && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Tolak {selectedProducts.size} Produk
-              </h3>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2 dark:text-gray-200">
-                  Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
-                </label>
-                <textarea
-                  value={bulkRejectionReason}
-                  onChange={(e) => setBulkRejectionReason(e.target.value)}
-                  placeholder="Berikan alasan penolakan untuk produk-produk ini..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
-                  rows={4}
-                />
-                <div className="mt-1 text-right">
-                  <span className={`text-xs ${bulkRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
-                    {bulkRejectionReason.trim().length}/10 karakter
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowBulkRejectModal(false);
-                    setBulkRejectionReason("");
-                  }}
-                  className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleSubmitBulkRejection}
-                  disabled={bulkRejectionReason.trim().length < 10}
-                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <XCircle className="size-5" />
-                  Tolak {selectedProducts.size} Produk
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Product Detail Modal */}
-        {selectedProductDetail && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              {/* Header */}
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Detail Produk</h3>
-                <button
-                  onClick={() => setSelectedProductDetail(null)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                {/* Product Image */}
-                {selectedProductDetail.gambar && (
-                  <div className="flex justify-center">
-                    <img
-                      src={`${BASE_HOST}/${selectedProductDetail.gambar}`}
-                      alt={selectedProductDetail.nama_produk}
-                      className="max-h-64 rounded-lg object-cover"
-                    />
-                  </div>
-                )}
-
-                {/* Product Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Nama Produk</label>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.nama_produk}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Harga</label>
-                    <p className="text-sm font-semibold text-green-600">{formatCurrency(selectedProductDetail.harga)}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Stok</label>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.stok}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Kategori</label>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.kategori || 'Tidak ada kategori'}</p>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Deskripsi</label>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">
-                    {selectedProductDetail.deskripsi || 'Tidak ada deskripsi'}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Produk: <strong>{rejectingProduct.nama_produk}</strong>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Toko: <strong>{rejectingProduct.nama_toko}</strong>
                   </p>
                 </div>
 
-                {/* Store Info */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">🏪 Informasi Toko</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Nama Toko</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedProductDetail.nama_toko}</p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Pemilik</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedProductDetail.nama_pemilik}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3">
-                <button
-                  onClick={() => {
-                    handleApproveProduct(selectedProductDetail.id);
-                    setSelectedProductDetail(null);
-                  }}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <Check className="size-4" /> Setujui Produk
-                </button>
-                <button
-                  onClick={() => {
-                    setRejectingProduct(selectedProductDetail);
-                    setProductRejectionReason("");
-                    setSelectedProductDetail(null);
-                  }}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <XCircle className="size-4" /> Tolak Produk
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Product Reject Modal with Comment */}
-        {rejectingProduct && (
-          <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full">
-              {/* Header */}
-              <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-red-600">Tolak Produk</h3>
-                <button
-                  onClick={() => {
-                    setRejectingProduct(null);
-                    setProductRejectionReason("");
-                  }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                {/* Product Info */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  {rejectingProduct.gambar && (
-                    <img
-                      src={`${BASE_HOST}/${rejectingProduct.gambar}`}
-                      alt={rejectingProduct.nama_produk}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                  )}
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{rejectingProduct.nama_produk}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{rejectingProduct.nama_toko}</p>
-                  </div>
-                </div>
-
-                {/* Reason Input */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Alasan Penolakan <span className="text-red-500">*</span>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">
+                    Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
                   </label>
                   <textarea
                     value={productRejectionReason}
                     onChange={(e) => setProductRejectionReason(e.target.value)}
+                    placeholder="Berikan alasan penolakan produk ini..."
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                    placeholder="Jelaskan alasan penolakan produk ini (minimal 10 karakter)..."
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {productRejectionReason.length}/10 karakter minimum
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3">
-                <button
-                  onClick={() => {
-                    setRejectingProduct(null);
-                    setProductRejectionReason("");
-                  }}
-                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={async () => {
-                    if (productRejectionReason.length < 10) {
-                      alert('Alasan penolakan minimal 10 karakter');
-                      return;
-                    }
-                    try {
-                      const response = await fetch(
-                        `${API_BASE_URL}/products/${rejectingProduct.id}/reject`,
-                        {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ comment: productRejectionReason }),
-                        }
-                      );
-                      const data = await response.json();
-                      if (response.ok && data.success) {
-                        alert('Produk berhasil ditolak');
-                        setRejectingProduct(null);
-                        setProductRejectionReason("");
-                        fetchData();
-                      } else {
-                        alert(data.message || 'Gagal menolak produk');
-                      }
-                    } catch (err) {
-                      console.error('Error rejecting product:', err);
-                      alert('Terjadi kesalahan saat menolak produk');
-                    }
-                  }}
-                  disabled={productRejectionReason.length < 10}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <XCircle className="size-4" /> Kirim Penolakan
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Role Request Detail Modal */}
-        {selectedRoleDetail && (
-          <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4" onClick={() => setSelectedRoleDetail(null)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detail Permintaan Role</h3>
-                <button onClick={() => setSelectedRoleDetail(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="size-5" /></button>
-              </div>
-              <div className="px-6 py-5 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nama</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedRoleDetail.userName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{selectedRoleDetail.userEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tanggal Pengajuan</p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{formatDate(selectedRoleDetail.submittedAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedRoleDetail.status === "approved" ? "bg-emerald-100 text-emerald-700" : selectedRoleDetail.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
-                      {selectedRoleDetail.status === "approved" ? "Disetujui" : selectedRoleDetail.status === "rejected" ? "Ditolak" : "Pending"}
+                  <div className="mt-1 text-right">
+                    <span className={`text-xs ${productRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
+                      {productRejectionReason.trim().length}/10 karakter
                     </span>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Role Saat Ini</p>
-                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded capitalize">{selectedRoleDetail.currentRole}</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Role Diminta</p>
-                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded capitalize">{selectedRoleDetail.requestedRole}</span>
-                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Alasan Pengajuan</p>
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-all leading-relaxed">
-                    {selectedRoleDetail.reason || "Tidak ada alasan yang diberikan"}
-                  </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setRejectingProduct(null);
+                      setProductRejectionReason("");
+                    }}
+                    className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleSubmitProductRejection}
+                    disabled={!productRejectionReason.trim()}
+                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <XCircle className="size-5" />
+                    Tolak Produk
+                  </button>
                 </div>
               </div>
-              {selectedRoleDetail.status === "pending" && (
-                <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 justify-end">
+            </div>
+          )
+        }
+
+        {/* UMKM Bulk Reject Modal */}
+        {
+          showBulkUmkmRejectModal && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  Tolak {selectedUmkmStores.size} Toko UMKM
+                </h3>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">
+                    Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
+                  </label>
+                  <textarea
+                    value={bulkUmkmRejectionReason}
+                    onChange={(e) => setBulkUmkmRejectionReason(e.target.value)}
+                    placeholder="Berikan alasan penolakan untuk toko-toko ini..."
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
+                    rows={4}
+                  />
+                  <div className="mt-1 text-right">
+                    <span className={`text-xs ${bulkUmkmRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
+                      {bulkUmkmRejectionReason.trim().length}/10 karakter
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end">
                   <button
-                    onClick={() => { handleRejectRoleRequest(selectedRoleDetail.id); setSelectedRoleDetail(null); }}
-                    className="px-4 py-2 text-sm font-medium text-rose-700 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setShowBulkUmkmRejectModal(false);
+                      setBulkUmkmRejectionReason("");
+                    }}
+                    className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
                   >
-                    <XCircle className="size-4" /> Tolak
+                    Batal
                   </button>
                   <button
-                    onClick={() => { handleApproveRoleRequest(selectedRoleDetail.id); setSelectedRoleDetail(null); }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                    onClick={handleSubmitBulkUmkmRejection}
+                    disabled={bulkUmkmRejectionReason.trim().length < 10}
+                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    <Check className="size-4" /> Setujui
+                    <XCircle className="size-5" />
+                    Tolak {selectedUmkmStores.size} Toko
                   </button>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
+
+        {/* Product Bulk Reject Modal */}
+        {
+          showBulkRejectModal && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  Tolak {selectedProducts.size} Produk
+                </h3>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">
+                    Alasan Penolakan * <span className="text-gray-500 dark:text-gray-400 text-xs">(minimal 10 karakter)</span>
+                  </label>
+                  <textarea
+                    value={bulkRejectionReason}
+                    onChange={(e) => setBulkRejectionReason(e.target.value)}
+                    placeholder="Berikan alasan penolakan untuk produk-produk ini..."
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] bg-white dark:bg-gray-700 dark:text-white"
+                    rows={4}
+                  />
+                  <div className="mt-1 text-right">
+                    <span className={`text-xs ${bulkRejectionReason.trim().length < 10 ? 'text-red-600' : 'text-green-600'}`}>
+                      {bulkRejectionReason.trim().length}/10 karakter
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowBulkRejectModal(false);
+                      setBulkRejectionReason("");
+                    }}
+                    className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleSubmitBulkRejection}
+                    disabled={bulkRejectionReason.trim().length < 10}
+                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <XCircle className="size-5" />
+                    Tolak {selectedProducts.size} Produk
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Product Detail Modal */}
+        {
+          selectedProductDetail && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Detail Produk</h3>
+                  <button
+                    onClick={() => setSelectedProductDetail(null)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-6">
+                  {/* Product Image */}
+                  {selectedProductDetail.gambar && (
+                    <div className="flex justify-center">
+                      <img
+                        src={`${BASE_HOST}/${selectedProductDetail.gambar}`}
+                        alt={selectedProductDetail.nama_produk}
+                        className="max-h-64 rounded-lg object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Product Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Nama Produk</label>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.nama_produk}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Harga</label>
+                      <p className="text-sm font-semibold text-green-600">{formatCurrency(selectedProductDetail.harga)}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Stok</label>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.stok}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Kategori</label>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedProductDetail.kategori || 'Tidak ada kategori'}</p>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Deskripsi</label>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">
+                      {selectedProductDetail.deskripsi || 'Tidak ada deskripsi'}
+                    </p>
+                  </div>
+
+                  {/* Store Info */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">🏪 Informasi Toko</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Nama Toko</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedProductDetail.nama_toko}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Pemilik</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedProductDetail.nama_pemilik}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3">
+                  <button
+                    onClick={() => {
+                      handleApproveProduct(selectedProductDetail.id);
+                      setSelectedProductDetail(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Check className="size-4" /> Setujui Produk
+                  </button>
+                  <button
+                    onClick={() => {
+                      setRejectingProduct(selectedProductDetail);
+                      setProductRejectionReason("");
+                      setSelectedProductDetail(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="size-4" /> Tolak Produk
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Product Reject Modal with Comment */}
+        {
+          rejectingProduct && (
+            <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full">
+                {/* Header */}
+                <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-red-600">Tolak Produk</h3>
+                  <button
+                    onClick={() => {
+                      setRejectingProduct(null);
+                      setProductRejectionReason("");
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  {/* Product Info */}
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    {rejectingProduct.gambar && (
+                      <img
+                        src={`${BASE_HOST}/${rejectingProduct.gambar}`}
+                        alt={rejectingProduct.nama_produk}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{rejectingProduct.nama_produk}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{rejectingProduct.nama_toko}</p>
+                    </div>
+                  </div>
+
+                  {/* Reason Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Alasan Penolakan <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={productRejectionReason}
+                      onChange={(e) => setProductRejectionReason(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                      placeholder="Jelaskan alasan penolakan produk ini (minimal 10 karakter)..."
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {productRejectionReason.length}/10 karakter minimum
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3">
+                  <button
+                    onClick={() => {
+                      setRejectingProduct(null);
+                      setProductRejectionReason("");
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (productRejectionReason.length < 10) {
+                        alert('Alasan penolakan minimal 10 karakter');
+                        return;
+                      }
+                      try {
+                        const response = await fetch(
+                          `${API_BASE_URL}/products/${rejectingProduct.id}/reject`,
+                          {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ comment: productRejectionReason }),
+                          }
+                        );
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                          alert('Produk berhasil ditolak');
+                          setRejectingProduct(null);
+                          setProductRejectionReason("");
+                          fetchData();
+                        } else {
+                          alert(data.message || 'Gagal menolak produk');
+                        }
+                      } catch (err) {
+                        console.error('Error rejecting product:', err);
+                        alert('Terjadi kesalahan saat menolak produk');
+                      }
+                    }}
+                    disabled={productRejectionReason.length < 10}
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="size-4" /> Kirim Penolakan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Role Request Detail Modal */}
+        {
+          selectedRoleDetail && (
+            <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4" onClick={() => setSelectedRoleDetail(null)}>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detail Permintaan Role</h3>
+                  <button onClick={() => setSelectedRoleDetail(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="size-5" /></button>
+                </div>
+                <div className="px-6 py-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nama</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedRoleDetail.userName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{selectedRoleDetail.userEmail}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tanggal Pengajuan</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{formatDate(selectedRoleDetail.submittedAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedRoleDetail.status === "approved" ? "bg-emerald-100 text-emerald-700" : selectedRoleDetail.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
+                        {selectedRoleDetail.status === "approved" ? "Disetujui" : selectedRoleDetail.status === "rejected" ? "Ditolak" : "Pending"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Role Saat Ini</p>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded capitalize">{selectedRoleDetail.currentRole}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Role Diminta</p>
+                      <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded capitalize">{selectedRoleDetail.requestedRole}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Alasan Pengajuan</p>
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-all leading-relaxed">
+                      {selectedRoleDetail.reason || "Tidak ada alasan yang diberikan"}
+                    </div>
+                  </div>
+                </div>
+                {selectedRoleDetail.status === "pending" && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 justify-end">
+                    <button
+                      onClick={() => { handleRejectRoleRequest(selectedRoleDetail.id); setSelectedRoleDetail(null); }}
+                      className="px-4 py-2 text-sm font-medium text-rose-700 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors flex items-center gap-2"
+                    >
+                      <XCircle className="size-4" /> Tolak
+                    </button>
+                    <button
+                      onClick={() => { handleApproveRoleRequest(selectedRoleDetail.id); setSelectedRoleDetail(null); }}
+                      className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                    >
+                      <Check className="size-4" /> Setujui
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
 
         {/* Image Edit Modal */}
-        {imageEditModal && (
-          <ImageEditModal
-            isOpen={imageEditModal.isOpen}
-            onClose={() => setImageEditModal(null)}
-            itemId={imageEditModal.itemId}
-            currentImage={imageEditModal.currentImage}
-            itemType={imageEditModal.itemType}
-            itemName={imageEditModal.itemName}
-            onSuccess={() => {
-              setImageEditModal(null);
-              fetchData(); // Refresh data after successful update
-            }}
-          />
-        )}
-      </div>
+        {
+          imageEditModal && (
+            <ImageEditModal
+              isOpen={imageEditModal.isOpen}
+              onClose={() => setImageEditModal(null)}
+              itemId={imageEditModal.itemId}
+              currentImage={imageEditModal.currentImage}
+              itemType={imageEditModal.itemType}
+              itemName={imageEditModal.itemName}
+              onSuccess={() => {
+                setImageEditModal(null);
+                fetchData(); // Refresh data after successful update
+              }}
+            />
+          )
+        }
+      </div >
     );
   } catch (err: any) {
     console.error('AdminPanel render error:', err);

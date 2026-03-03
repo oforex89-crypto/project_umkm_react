@@ -25,6 +25,8 @@ class User extends Authenticatable
         'kota',
         'kode_pos',
         'foto_profil',
+        'google_id',
+        'last_login_at',
     ];
 
     protected $hidden = [

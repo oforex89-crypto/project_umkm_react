@@ -99,6 +99,7 @@ Route::prefix('auth')->group(function () {
     Route::post('check-email', [AuthController::class, 'checkEmail']); // Check if email is already registered
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']); // Forgot password - send OTP
     Route::post('reset-password', [AuthController::class, 'resetPassword']); // Reset password with OTP
+    Route::post('google', [AuthController::class, 'loginWithGoogle']); // Login/Register with Google
 });
 
 // Admin Management Routes (Protected - hanya admin yang bisa akses)
@@ -113,6 +114,7 @@ Route::prefix('admin')->group(function () {
     // Get all users
     Route::get('/users', [AdminController::class, 'users']); // Changed from getAllUsers to users
     Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
     
     // Statistics
     Route::get('/statistics', [AdminController::class, 'statistics']);

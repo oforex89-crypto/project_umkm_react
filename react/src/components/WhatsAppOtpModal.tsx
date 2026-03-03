@@ -7,6 +7,7 @@ interface WhatsAppOtpModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (phoneNumber: string) => void;
+  onSwitchToLogin?: () => void; // Switch ke mode login jika nomor sudah terdaftar
   type: "user" | "business"; // Jenis registrasi
   registrationData?: {
     email: string;
@@ -19,6 +20,7 @@ export function WhatsAppOtpModal({
   isOpen,
   onClose,
   onSuccess,
+  onSwitchToLogin,
   type,
   registrationData,
 }: WhatsAppOtpModalProps) {
@@ -104,9 +106,16 @@ export function WhatsAppOtpModal({
       // Handle 409 Conflict - Nomor sudah terdaftar
       if (response.status === 409) {
         toast.error(
-          "Nomor WhatsApp sudah terdaftar. Silakan login dengan akun yang sudah ada."
+          "Nomor WhatsApp ini sudah terdaftar. Silakan login menggunakan email dan password akun Anda."
         );
         setIsLoading(false);
+        // Auto switch ke mode login jika callback tersedia
+        if (onSwitchToLogin) {
+          setTimeout(() => {
+            onClose();
+            onSwitchToLogin();
+          }, 1500);
+        }
         return;
       }
 

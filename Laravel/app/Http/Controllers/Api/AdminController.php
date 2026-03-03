@@ -226,7 +226,7 @@ class AdminController extends Controller
 
     /**
      * PUT /api/admin/users/{id}/role
-     * Update role user
+     * Update user data (role, status, nama_lengkap)
      */
     public function updateUserRole(Request $request, $id)
     {
@@ -240,27 +240,63 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate([
-            'role' => 'required|in:customer,umkm,admin'
+            'role' => 'sometimes|in:customer,umkm,admin',
+            'status' => 'sometimes|in:active,inactive',
+            'nama_lengkap' => 'sometimes|string|max:255',
         ]);
 
-        $user->role = $validated['role'];
+        if (isset($validated['role'])) {
+            $user->role = $validated['role'];
+        }
+        if (isset($validated['status'])) {
+            $user->status = $validated['status'];
+        }
+        if (isset($validated['nama_lengkap'])) {
+            $user->nama_lengkap = $validated['nama_lengkap'];
+        }
+
         $user->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Role user berhasil diupdate',
+            'message' => 'User berhasil diupdate',
             'data' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'name' => $user->nama_lengkap,
                 'email' => $user->email,
                 'role' => $user->role,
+                'status' => $user->status,
             ]
+        ], 200);
+    }
+
+    /**
+     * DELETE /api/admin/users/{id}
+     * Delete a user
+     */
+    public function deleteUser($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User berhasil dihapus'
         ], 200);
     }
 
     /**
      * GET /api/admin/users
      * Get all users from database
+     * Auto-deactivate users inactive for 30+ days
      */
     public function users()
     {
@@ -272,6 +308,7 @@ class AdminController extends Controller
                 'no_telepon',
                 'role',
                 'status',
+                'last_login_at',
                 'created_at'
             )
             ->orderBy('created_at', 'desc')
