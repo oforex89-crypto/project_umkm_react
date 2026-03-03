@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use App\Models\Tumkm;
 use App\Models\Tproduk;
@@ -138,8 +139,7 @@ class UmkmController extends Controller
                 $file = $request->file('foto_toko');
                 $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_toko);
                 $filename = 'toko_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/toko'), $filename);
-                $fotoTokoPath = 'uploads/toko/' . $filename;
+                $fotoTokoPath = UploadHelper::upload($file, 'toko', $filename);
             }
 
             // Handle dokumen_perjanjian upload
@@ -148,8 +148,7 @@ class UmkmController extends Controller
                 $file = $request->file('dokumen_perjanjian');
                 $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_toko);
                 $filename = 'perjanjian_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/dokumen'), $filename);
-                $dokumenPath = 'uploads/dokumen/' . $filename;
+                $dokumenPath = UploadHelper::upload($file, 'dokumen', $filename);
             }
 
             // Check if user already has UMKM store
@@ -234,13 +233,7 @@ class UmkmController extends Controller
                     $file = $request->file($imageKey);
                     $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $produk['nama_produk'] ?? 'product');
                     $filename = 'product_' . $umkm->id . '_' . $index . '_' . time() . '.' . $file->getClientOriginalExtension();
-                    
-                    if (!file_exists(public_path('uploads/products'))) {
-                        mkdir(public_path('uploads/products'), 0777, true);
-                    }
-                    
-                    $file->move(public_path('uploads/products'), $filename);
-                    $gambarPath = 'uploads/products/' . $filename;
+                    $gambarPath = UploadHelper::upload($file, 'products', $filename);
                     \Log::info("Product image uploaded", ['path' => $gambarPath, 'umkm_id' => $umkm->id]);
                 } elseif (!empty($produk['gambar'])) {
                     // Fallback: handle base64 image if sent in JSON
@@ -628,8 +621,7 @@ class UmkmController extends Controller
                 $file = $request->file('foto_toko');
                 $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_toko ?? 'toko');
                 $filename = 'toko_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/toko'), $filename);
-                $updateData['foto_toko'] = 'uploads/toko/' . $filename;
+                $updateData['foto_toko'] = UploadHelper::upload($file, 'toko', $filename);
                 \Log::info('✅ Image saved: ' . $updateData['foto_toko']);
             } else {
                 \Log::info('ℹ️ No new image file in request');
@@ -733,8 +725,7 @@ class UmkmController extends Controller
                 $file = $request->file('gambar');
                 $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $request->nama_produk ?? 'produk');
                 $filename = 'produk_' . $sanitizedName . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/produk'), $filename);
-                $updateData['gambar'] = 'uploads/produk/' . $filename;
+                $updateData['gambar'] = UploadHelper::upload($file, 'produk', $filename);
             }
 
             $product->update($updateData);
@@ -1054,8 +1045,7 @@ class UmkmController extends Controller
                     mkdir(public_path('uploads/products'), 0777, true);
                 }
                 
-                $file->move(public_path('uploads/products'), $filename);
-                $gambarPath = 'uploads/products/' . $filename;
+                $gambarPath = UploadHelper::upload($file, 'products', $filename);
             }
 
             // Create product with pending status (needs admin approval)
@@ -1079,11 +1069,11 @@ class UmkmController extends Controller
                 $sortOrder = 1;
                 foreach ($extraFiles as $extraFile) {
                     $extraFilename = 'product_' . $umkm->id . '_' . time() . '_' . $sortOrder . '.' . $extraFile->getClientOriginalExtension();
-                    $extraFile->move(public_path('uploads/products'), $extraFilename);
+                    $extraImagePath = UploadHelper::upload($extraFile, 'products', $extraFilename);
                     
                     DB::table('product_images')->insert([
                         'product_id' => $productId,
-                        'image_path' => 'uploads/products/' . $extraFilename,
+                        'image_path' => $extraImagePath,
                         'sort_order' => $sortOrder,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -1125,8 +1115,7 @@ class UmkmController extends Controller
                                         mkdir(public_path('uploads/variants'), 0777, true);
                                     }
                                     $vFilename = 'variant_' . $productId . '_' . $typeIndex . '_' . $optIndex . '_' . time() . '.' . $vFile->getClientOriginalExtension();
-                                    $vFile->move(public_path('uploads/variants'), $vFilename);
-                                    $optionImagePath = 'uploads/variants/' . $vFilename;
+                                    $optionImagePath = UploadHelper::upload($vFile, 'variants', $vFilename);
                                 }
 
                                 DB::table('product_variant_options')->insert([
@@ -1616,8 +1605,7 @@ class UmkmController extends Controller
                     unlink(public_path($product->gambar));
                 }
                 
-                $file->move(public_path('uploads/products'), $filename);
-                $updateData['gambar'] = 'uploads/products/' . $filename;
+                $updateData['gambar'] = UploadHelper::upload($file, 'products', $filename);
             }
 
             DB::table('tproduk')->where('id', $id)->update($updateData);
@@ -1884,8 +1872,7 @@ class UmkmController extends Controller
                     mkdir(public_path('uploads/toko'), 0777, true);
                 }
                 
-                $file->move(public_path('uploads/toko'), $filename);
-                $updateData['foto_toko'] = 'uploads/toko/' . $filename;
+                $updateData['foto_toko'] = UploadHelper::upload($file, 'toko', $filename);
                 \Log::info('✅ Image saved: ' . $updateData['foto_toko']);
             }
 

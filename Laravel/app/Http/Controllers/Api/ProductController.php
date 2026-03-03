@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadHelper;
 use App\Models\Product;
 use App\Models\Business;
 use App\Models\ProductVariantType;
@@ -134,8 +135,7 @@ class ProductController extends Controller
             if ($request->hasFile('gambar')) {
                 $file = $request->file('gambar');
                 $filename = 'produk_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/produk'), $filename);
-                $updateData['gambar'] = 'uploads/produk/' . $filename;
+                $updateData['gambar'] = UploadHelper::upload($file, 'produk', $filename);
             }
 
             if (!empty($updateData)) {
@@ -182,11 +182,11 @@ class ProductController extends Controller
 
                 foreach ($files as $index => $file) {
                     $filename = 'produk_extra_' . time() . '_' . $id . '_' . ($maxSort + $index + 1) . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path('uploads/products'), $filename);
+                    $imagePath = UploadHelper::upload($file, 'products', $filename);
                     
                     \DB::table('product_images')->insert([
                         'product_id' => $id,
-                        'image_path' => 'uploads/products/' . $filename,
+                        'image_path' => $imagePath,
                         'sort_order' => $maxSort + $index + 1,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -250,8 +250,7 @@ class ProductController extends Controller
                                         mkdir(public_path('uploads/variants'), 0777, true);
                                     }
                                     $vFilename = 'variant_' . $id . '_' . $typeIndex . '_' . $optIndex . '_' . time() . '.' . $vFile->getClientOriginalExtension();
-                                    $vFile->move(public_path('uploads/variants'), $vFilename);
-                                    $optionImagePath = 'uploads/variants/' . $vFilename;
+                                    $optionImagePath = UploadHelper::upload($vFile, 'variants', $vFilename);
                                 }
 
                                 \DB::table('product_variant_options')->insert([

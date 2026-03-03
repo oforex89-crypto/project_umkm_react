@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -105,8 +106,7 @@ class SiteSettingsController extends Controller
 
                 // Save new logo
                 $filename = 'site_logo_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/site'), $filename);
-                $logoPath = 'uploads/site/' . $filename;
+                $logoPath = UploadHelper::upload($file, 'site', $filename);
 
                 DB::table('site_settings')
                     ->updateOrInsert(

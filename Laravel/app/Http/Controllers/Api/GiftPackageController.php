@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -215,8 +216,7 @@ class GiftPackageController extends Controller
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/gift-packages'), $filename);
-                $imagePath = 'uploads/gift-packages/' . $filename;
+                $imagePath = UploadHelper::upload($file, 'gift-packages', $filename);
             }
 
             // Prepare items as JSON
@@ -284,8 +284,7 @@ class GiftPackageController extends Controller
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/gift-packages'), $filename);
-                $imagePath = 'uploads/gift-packages/' . $filename;
+                $imagePath = UploadHelper::upload($file, 'gift-packages', $filename);
             } elseif ($request->has('image') && is_string($request->image)) {
                 $imagePath = $request->image;
             }
@@ -486,8 +485,7 @@ class GiftPackageController extends Controller
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/gift-packages'), $filename);
-                $imagePath = 'uploads/gift-packages/' . $filename;
+                $imagePath = UploadHelper::upload($file, 'gift-packages', $filename);
             } elseif ($request->has('image') && is_string($request->image)) {
                 $imagePath = $request->image;
             }

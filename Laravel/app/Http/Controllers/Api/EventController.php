@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\UploadHelper;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Services\NotificationService;
@@ -205,8 +206,7 @@ class EventController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/events'), $filename);
-            $imagePath = 'uploads/events/' . $filename;
+            $imagePath = UploadHelper::upload($file, 'events', $filename);
         } elseif ($request->filled('image') && filter_var($request->image, FILTER_VALIDATE_URL)) {
             // If image is a URL
             $imagePath = $request->image;
@@ -314,8 +314,7 @@ class EventController extends Controller
             
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/events'), $filename);
-            $updateData['gambar'] = 'uploads/events/' . $filename;
+            $updateData['gambar'] = UploadHelper::upload($file, 'events', $filename);
         } elseif ($request->filled('image') && filter_var($request->image, FILTER_VALIDATE_URL)) {
             // If image is a URL
             $updateData['gambar'] = $request->image;
@@ -591,8 +590,7 @@ class EventController extends Controller
             if ($request->hasFile('agreement_file')) {
                 $file = $request->file('agreement_file');
                 $filename = time() . '_agreement_' . $validated['umkm_id'] . '_' . $validated['event_id'] . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('uploads/event_agreements'), $filename);
-                $agreementFilePath = 'uploads/event_agreements/' . $filename;
+                $agreementFilePath = UploadHelper::upload($file, 'event_agreements', $filename);
             }
 
             // Register vendor
