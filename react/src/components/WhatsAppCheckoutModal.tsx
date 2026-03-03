@@ -126,12 +126,8 @@ export function WhatsAppCheckoutModal({
             }
         }
 
-        // Add location info
-        if (umkmLocation) {
-            message += `\n*Info:* Saya menemukan toko Anda di ${umkmLocation}\n`;
-        } else {
-            message += `\n*Info:* Saya menemukan toko Anda di Pasar UMKM Digital\n`;
-        }
+        // Add website link
+        message += `\n*Info:* Pesanan dari https://project-umkm-react.vercel.app\n`;
 
         message += `\nTerima kasih!`;
 

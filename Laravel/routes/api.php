@@ -23,6 +23,112 @@ Route::get('/test', function () {
     return response()->json(['status' => 'API is working']);
 });
 
+// Temporary route to seed dummy UMKM stores
+Route::get('/seed-dummy-stores', function () {
+    $waNumber = '6281175447460'; // Same WA number for all
+
+    $stores = [
+        [
+            'nama_toko' => 'Warung Makan Sederhana',
+            'nama_pemilik' => 'Budi Santoso',
+            'deskripsi' => 'Warung makan khas Jawa Timur menyajikan aneka masakan rumahan dengan cita rasa otentik. Nasi campur, rawon, dan soto ayam menjadi menu andalan kami.',
+            'category_id' => 1,
+            'foto_toko' => 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+            'products' => [
+                ['nama' => 'Nasi Campur Spesial', 'harga' => 25000, 'deskripsi' => 'Nasi campur dengan lauk lengkap pilihan', 'gambar' => 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400'],
+                ['nama' => 'Rawon Daging Sapi', 'harga' => 30000, 'deskripsi' => 'Rawon khas Surabaya dengan daging sapi empuk', 'gambar' => 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400'],
+                ['nama' => 'Soto Ayam Lamongan', 'harga' => 20000, 'deskripsi' => 'Soto ayam gurih dengan koya dan sambal', 'gambar' => 'https://images.unsplash.com/photo-1569058242567-93de6f36f8e6?w=400'],
+            ],
+        ],
+        [
+            'nama_toko' => 'Batik Nusantara',
+            'nama_pemilik' => 'Siti Rahayu',
+            'deskripsi' => 'Toko batik tulis dan cap berkualitas tinggi dari pengrajin lokal. Tersedia berbagai motif batik tradisional dan modern.',
+            'category_id' => 2,
+            'foto_toko' => 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400',
+            'products' => [
+                ['nama' => 'Batik Tulis Motif Parang', 'harga' => 350000, 'deskripsi' => 'Batik tulis asli dengan motif parang klasik', 'gambar' => 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400'],
+                ['nama' => 'Kemeja Batik Modern', 'harga' => 185000, 'deskripsi' => 'Kemeja batik slim fit cocok untuk kerja', 'gambar' => 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400'],
+            ],
+        ],
+        [
+            'nama_toko' => 'Kerajinan Tangan Ibu Maria',
+            'nama_pemilik' => 'Maria Kristiani',
+            'deskripsi' => 'Kerajinan tangan handmade dari bahan-bahan lokal. Aksesori, tas rajut, dan hiasan rumah unik buatan tangan.',
+            'category_id' => 3,
+            'foto_toko' => 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400',
+            'products' => [
+                ['nama' => 'Tas Rajut Handmade', 'harga' => 150000, 'deskripsi' => 'Tas rajut cantik buatan tangan', 'gambar' => 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400'],
+                ['nama' => 'Gelang Manik-Manik', 'harga' => 45000, 'deskripsi' => 'Gelang manik-manik warna-warni handmade', 'gambar' => 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400'],
+                ['nama' => 'Hiasan Dinding Macrame', 'harga' => 120000, 'deskripsi' => 'Hiasan dinding macrame bohemian style', 'gambar' => 'https://images.unsplash.com/photo-1524549207578-1a08292e1059?w=400'],
+            ],
+        ],
+        [
+            'nama_toko' => 'Kopi Nusantara Roastery',
+            'nama_pemilik' => 'Agus Prasetyo',
+            'deskripsi' => 'Roastery kopi lokal pilihan dari berbagai daerah di Indonesia. Biji kopi segar yang di-roast dengan sempurna.',
+            'category_id' => 1,
+            'foto_toko' => 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
+            'products' => [
+                ['nama' => 'Kopi Toraja 250gr', 'harga' => 85000, 'deskripsi' => 'Biji kopi Toraja medium roast', 'gambar' => 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400'],
+                ['nama' => 'Kopi Gayo Aceh 250gr', 'harga' => 95000, 'deskripsi' => 'Biji kopi Gayo premium grade', 'gambar' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefda?w=400'],
+                ['nama' => 'Drip Bag Coffee (10 pcs)', 'harga' => 65000, 'deskripsi' => 'Drip bag praktis untuk kopi nikmat di mana saja', 'gambar' => 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400'],
+            ],
+        ],
+    ];
+
+    $created = [];
+    foreach ($stores as $store) {
+        // Check if store already exists
+        $existing = \DB::table('tumkm')->where('nama_toko', $store['nama_toko'])->first();
+        if ($existing) {
+            $created[] = $store['nama_toko'] . ' (already exists)';
+            continue;
+        }
+
+        $umkmId = \DB::table('tumkm')->insertGetId([
+            'nama_toko' => $store['nama_toko'],
+            'nama_pemilik' => $store['nama_pemilik'],
+            'deskripsi' => $store['deskripsi'],
+            'category_id' => $store['category_id'],
+            'foto_toko' => $store['foto_toko'],
+            'whatsapp' => $waNumber,
+            'email' => strtolower(str_replace(' ', '.', $store['nama_pemilik'])) . '@demo.com',
+            'status' => 'active',
+            'menyediakan_jasa_kirim' => true,
+            'nama_bank' => 'BNI',
+            'no_rekening' => '4879902571',
+            'atas_nama_rekening' => $store['nama_pemilik'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        foreach ($store['products'] as $product) {
+            \DB::table('tproduk')->insert([
+                'umkm_id' => $umkmId,
+                'nama_produk' => $product['nama'],
+                'harga' => $product['harga'],
+                'deskripsi' => $product['deskripsi'],
+                'gambar' => $product['gambar'],
+                'stok' => rand(10, 100),
+                'status' => 'active',
+                'approval_status' => 'approved',
+                'kategori' => 'product',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $created[] = $store['nama_toko'] . ' (' . count($store['products']) . ' products)';
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Dummy stores created',
+        'stores' => $created,
+    ]);
+});
+
 // TEMPORARY: Add google_id and last_login_at to users table - REMOVE AFTER USE
 Route::get('/setup-users-columns', function () {
     try {
