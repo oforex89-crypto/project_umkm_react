@@ -2413,9 +2413,9 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
         {
           selectedStoreDetail && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-center justify-between">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                     Detail Pengajuan Toko UMKM
                   </h2>
                   <button
@@ -2426,9 +2426,9 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                   </button>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                   {/* Info Toko */}
-                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-4 sm:p-6 space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-3">
                       {/* Logo Toko - Bulat Kecil */}
                       {selectedStoreDetail.foto_toko ? (
@@ -2455,7 +2455,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                       Informasi Toko
                     </h3>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <p className="text-sm text-slate-500 dark:text-gray-400">Nama Toko</p>
                         <p className="font-semibold text-slate-900 dark:text-white">
@@ -2501,14 +2501,14 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                   </div>
 
                   {/* Kontak */}
-                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-6 space-y-4">
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-lg p-4 sm:p-6 space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                       Informasi Kontak
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <p className="text-sm text-slate-500 dark:text-gray-400">Email</p>
-                        <p className="text-slate-900 dark:text-white">
+                        <p className="text-slate-900 dark:text-white break-all">
                           {selectedStoreDetail.email || "-"}
                         </p>
                       </div>
@@ -2539,7 +2539,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                       📄 Dokumen Perjanjian
                     </h3>
                     {selectedStoreDetail.dokumen_perjanjian ? (
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <a
                           href={`${BASE_HOST}/${selectedStoreDetail.dokumen_perjanjian}`}
                           target="_blank"
@@ -2551,7 +2551,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                           </svg>
                           Lihat/Download Dokumen
                         </a>
-                        <span className="text-sm text-slate-500 dark:text-gray-400">
+                        <span className="text-sm text-slate-500 dark:text-gray-400 truncate max-w-[200px] sm:max-w-none">
                           {selectedStoreDetail.dokumen_perjanjian.split('/').pop()}
                         </span>
                       </div>
@@ -2565,7 +2565,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                       ⛪ Informasi Paroki
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <p className="text-sm text-slate-500 dark:text-gray-400">Paroki</p>
                         <p className="text-slate-900 dark:text-white">
@@ -2586,7 +2586,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                       🏦 Informasi Rekening Bank
                     </h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       <div>
                         <p className="text-sm text-slate-500 dark:text-gray-400">Nama Bank</p>
                         <p className="text-slate-900 dark:text-white font-medium">
@@ -2656,14 +2656,14 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                   : 'border-slate-200 dark:border-gray-600'
                                 }`}
                             >
-                              <div className="flex gap-4">
+                              <div className="flex flex-col sm:flex-row gap-4">
                                 {/* Product Image */}
                                 <div className="flex-shrink-0">
                                   {product.gambar ? (
                                     <img
                                       src={getImageUrl(product.gambar, BASE_HOST, getPlaceholderDataUrl("No Image", 128, 128))}
                                       alt={product.nama_produk}
-                                      className="w-32 h-32 object-cover rounded-lg"
+                                      className="w-full sm:w-32 h-32 object-cover rounded-lg"
                                       onError={(e) => handleImageError(e, "No Image")}
                                     />
                                   ) : (
