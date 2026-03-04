@@ -86,14 +86,31 @@ Route::get('/seed-dummy-stores', function () {
             continue;
         }
 
+        // Create a dummy user for this store
+        $userEmail = strtolower(str_replace(' ', '.', $store['nama_pemilik'])) . '@demo.com';
+        $existingUser = \DB::table('users')->where('email', $userEmail)->first();
+        if ($existingUser) {
+            $userId = $existingUser->id;
+        } else {
+            $userId = \DB::table('users')->insertGetId([
+                'name' => $store['nama_pemilik'],
+                'email' => $userEmail,
+                'password' => bcrypt('demo12345'),
+                'role' => 'umkm',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         $umkmId = \DB::table('tumkm')->insertGetId([
+            'user_id' => $userId,
             'nama_toko' => $store['nama_toko'],
             'nama_pemilik' => $store['nama_pemilik'],
             'deskripsi' => $store['deskripsi'],
             'kategori_id' => $store['kategori_id'],
             'foto_toko' => $store['foto_toko'],
             'whatsapp' => $waNumber,
-            'email' => strtolower(str_replace(' ', '.', $store['nama_pemilik'])) . '@demo.com',
+            'email' => $userEmail,
             'status' => 'active',
             'menyediakan_jasa_kirim' => true,
             'nama_bank' => 'BNI',
