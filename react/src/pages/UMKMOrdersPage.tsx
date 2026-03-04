@@ -32,7 +32,7 @@ const BASE_URL = BASE_HOST;
 // Helper to get full image URL
 const getImageUrl = (imagePath: string | undefined): string => {
     if (!imagePath) return "";
-    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) return imagePath;
     const cleanPath = imagePath.replace(/^\/+/, '');
     return `${BASE_URL}/${cleanPath}`;
 };

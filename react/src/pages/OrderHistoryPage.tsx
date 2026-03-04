@@ -13,8 +13,8 @@ const BASE_URL = API_BASE_URL;
 // Helper to get full image URL
 const getImageUrl = (imagePath: string | undefined): string => {
     if (!imagePath) return "";
-    // If already a full URL, return as-is
-    if (imagePath.startsWith('http')) return imagePath;
+    // If already a full URL or data URI, return as-is
+    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) return imagePath;
     // If it's a relative path, prepend base URL
     const cleanPath = imagePath.replace(/^\/+/, '');
     return `${BASE_URL}/${cleanPath}`;

@@ -95,7 +95,7 @@ export function UmkmListPage() {
 
     const getImageUrl = (imagePath: string) => {
         if (!imagePath) return "";
-        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+        if (imagePath.startsWith("data:") || imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
             return imagePath;
         }
         return `${BASE_HOST}/${imagePath}`;
