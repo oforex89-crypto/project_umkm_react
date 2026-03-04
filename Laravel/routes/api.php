@@ -44,7 +44,7 @@ Route::get('/seed-dummy-stores', function () {
             'nama_toko' => 'Batik Nusantara',
             'nama_pemilik' => 'Siti Rahayu',
             'deskripsi' => 'Toko batik tulis dan cap berkualitas tinggi dari pengrajin lokal. Tersedia berbagai motif batik tradisional dan modern.',
-            'category_id' => 2,
+            'kategori_id' => 2,
             'foto_toko' => 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400',
             'products' => [
                 ['nama' => 'Batik Tulis Motif Parang', 'harga' => 350000, 'deskripsi' => 'Batik tulis asli dengan motif parang klasik', 'gambar' => 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400'],
@@ -55,7 +55,7 @@ Route::get('/seed-dummy-stores', function () {
             'nama_toko' => 'Kerajinan Tangan Ibu Maria',
             'nama_pemilik' => 'Maria Kristiani',
             'deskripsi' => 'Kerajinan tangan handmade dari bahan-bahan lokal. Aksesori, tas rajut, dan hiasan rumah unik buatan tangan.',
-            'category_id' => 3,
+            'kategori_id' => 3,
             'foto_toko' => 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400',
             'products' => [
                 ['nama' => 'Tas Rajut Handmade', 'harga' => 150000, 'deskripsi' => 'Tas rajut cantik buatan tangan', 'gambar' => 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400'],
