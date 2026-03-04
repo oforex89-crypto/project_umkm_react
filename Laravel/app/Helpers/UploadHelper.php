@@ -10,7 +10,7 @@ class UploadHelper
      */
     public static function upload($file, $folder = 'uploads', $filename = null)
     {
-        $cloudinaryUrl = env('CLOUDINARY_URL');
+        $cloudinaryUrl = config('cloudinary.cloud_url');
         
         if ($cloudinaryUrl) {
             try {

@@ -32,7 +32,7 @@ Route::get('/seed-dummy-stores', function () {
             'nama_toko' => 'Warung Makan Sederhana',
             'nama_pemilik' => 'Budi Santoso',
             'deskripsi' => 'Warung makan khas Jawa Timur menyajikan aneka masakan rumahan dengan cita rasa otentik. Nasi campur, rawon, dan soto ayam menjadi menu andalan kami.',
-            'category_id' => 1,
+            'kategori_id' => 1,
             'foto_toko' => 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
             'products' => [
                 ['nama' => 'Nasi Campur Spesial', 'harga' => 25000, 'deskripsi' => 'Nasi campur dengan lauk lengkap pilihan', 'gambar' => 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400'],
@@ -67,7 +67,7 @@ Route::get('/seed-dummy-stores', function () {
             'nama_toko' => 'Kopi Nusantara Roastery',
             'nama_pemilik' => 'Agus Prasetyo',
             'deskripsi' => 'Roastery kopi lokal pilihan dari berbagai daerah di Indonesia. Biji kopi segar yang di-roast dengan sempurna.',
-            'category_id' => 1,
+            'kategori_id' => 1,
             'foto_toko' => 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
             'products' => [
                 ['nama' => 'Kopi Toraja 250gr', 'harga' => 85000, 'deskripsi' => 'Biji kopi Toraja medium roast', 'gambar' => 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400'],
@@ -90,7 +90,7 @@ Route::get('/seed-dummy-stores', function () {
             'nama_toko' => $store['nama_toko'],
             'nama_pemilik' => $store['nama_pemilik'],
             'deskripsi' => $store['deskripsi'],
-            'category_id' => $store['category_id'],
+            'kategori_id' => $store['kategori_id'],
             'foto_toko' => $store['foto_toko'],
             'whatsapp' => $waNumber,
             'email' => strtolower(str_replace(' ', '.', $store['nama_pemilik'])) . '@demo.com',
