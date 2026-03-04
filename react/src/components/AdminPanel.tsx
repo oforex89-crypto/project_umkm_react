@@ -2196,10 +2196,10 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                           {users
                             .filter(
                               (u) =>
-                                u.name
+                                (u.name || '')
                                   .toLowerCase()
                                   .includes(searchQuery.toLowerCase()) ||
-                                u.email
+                                (u.email || '')
                                   .toLowerCase()
                                   .includes(searchQuery.toLowerCase())
                             )
