@@ -108,7 +108,7 @@ export function EventApplicationModal({
             id: String(p.id),
             name: p.nama_produk,
             price: parseFloat(p.harga) || 0,
-            image: p.gambar ? (p.gambar.startsWith('http') ? p.gambar : `${BASE_HOST}/${p.gambar}`) : "",
+            image: p.gambar ? (p.gambar.startsWith('data:') || p.gambar.startsWith('http') ? p.gambar : `${BASE_HOST}/${p.gambar}`) : "",
             description: p.deskripsi || "",
           })),
         }));

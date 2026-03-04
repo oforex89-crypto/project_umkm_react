@@ -46,7 +46,7 @@ export function ProductsPage() {
               // Handle product image URL
               let productImage = "/api/placeholder/400/300";
               if (product.gambar) {
-                if (product.gambar.startsWith('http://') || product.gambar.startsWith('https://')) {
+                if (product.gambar.startsWith('data:') || product.gambar.startsWith('http://') || product.gambar.startsWith('https://')) {
                   productImage = product.gambar;
                 } else {
                   productImage = `${BASE_HOST}/${product.gambar}`;
@@ -71,8 +71,8 @@ export function ProductsPage() {
             description: umkm.deskripsi || "Produk berkualitas dari UMKM lokal",
             category: umkm.category?.nama_kategori || "Lainnya",
             rating: parseFloat(umkm.rating) || 4.5,
-            image: umkm.foto_toko // Fixed: was foto_profil
-              ? (umkm.foto_toko.startsWith('http://') || umkm.foto_toko.startsWith('https://')
+            image: umkm.foto_toko
+              ? (umkm.foto_toko.startsWith('data:') || umkm.foto_toko.startsWith('http://') || umkm.foto_toko.startsWith('https://')
                 ? umkm.foto_toko
                 : `${BASE_HOST}/${umkm.foto_toko}`)
               : "/api/placeholder/400/300",

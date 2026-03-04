@@ -2331,7 +2331,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                   <div className="flex items-center gap-3">
                                     {product.gambar && (
                                       <img
-                                        src={`${BASE_HOST}/${product.gambar}`}
+                                        src={getImageUrl(product.gambar, BASE_HOST, getPlaceholderDataUrl("No Image", 40, 40))}
                                         alt={product.nama_produk}
                                         className="w-10 h-10 rounded-lg object-cover"
                                       />
@@ -2436,7 +2436,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                           src={
                             selectedStoreDetail.foto_toko.startsWith("data:image")
                               ? selectedStoreDetail.foto_toko
-                              : `${BASE_HOST}/${selectedStoreDetail.foto_toko}`
+                              : (selectedStoreDetail.foto_toko.startsWith('http') || selectedStoreDetail.foto_toko.startsWith('data:') ? selectedStoreDetail.foto_toko : `${BASE_HOST}/${selectedStoreDetail.foto_toko}`)
                           }
                           alt={selectedStoreDetail.nama_toko}
                           className="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-gray-500 flex-shrink-0"
@@ -3128,7 +3128,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                   {selectedProductDetail.gambar && (
                     <div className="flex justify-center">
                       <img
-                        src={`${BASE_HOST}/${selectedProductDetail.gambar}`}
+                        src={getImageUrl(selectedProductDetail.gambar, BASE_HOST, getPlaceholderDataUrl("No Image"))}
                         alt={selectedProductDetail.nama_produk}
                         className="max-h-64 rounded-lg object-cover"
                       />
@@ -3231,7 +3231,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                   <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     {rejectingProduct.gambar && (
                       <img
-                        src={`${BASE_HOST}/${rejectingProduct.gambar}`}
+                        src={getImageUrl(rejectingProduct.gambar, BASE_HOST, getPlaceholderDataUrl("No Image", 48, 48))}
                         alt={rejectingProduct.nama_produk}
                         className="w-12 h-12 rounded-lg object-cover"
                       />

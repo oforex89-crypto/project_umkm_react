@@ -682,7 +682,7 @@ export function UmkmStatusModal({ isOpen, onClose }: UmkmStatusModalProps) {
               {editingProduct.gambar && (
                 <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <img
-                    src={editingProduct.gambar.startsWith('http')
+                    src={editingProduct.gambar.startsWith('data:') || editingProduct.gambar.startsWith('http')
                       ? editingProduct.gambar
                       : `${BASE_HOST}/${editingProduct.gambar}`}
                     alt={editingProduct.nama_produk}
